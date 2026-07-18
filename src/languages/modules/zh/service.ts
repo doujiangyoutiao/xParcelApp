@@ -1,0 +1,21 @@
+export default {
+  connected_providers: "可连接的物流服务商:",
+  service_list: "服务列表",
+  provider: "服务商",
+  service_code: "服务代码",
+  remark: "备注",
+  creation_time: "创建时间",
+  operation: "操作",
+  edit_service: "修改服务",
+  add_service: "新增服务",
+  related_parameters: "相关参数",
+  your_logistics_service_name: "您的物流服务名",
+  please_enter_service_name: "请输入服务名",
+  remark_label: "备注",
+  please_enter_remark: "请输入备注",
+  please_enter: "请输入",
+  cancel: "取消",
+  save: "保存",
+  update_success: "修改成功",
+  add_success: "新增成功"
+};

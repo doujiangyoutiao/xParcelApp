@@ -1,0 +1,100 @@
+.el-container {
+  width: 100%;
+  height: 100%;
+}
+.el-header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  background: #1a1f2e !important;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+.logo {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  margin-right: 40px;
+  .logo-img {
+    display: none;
+  }
+  .logo-text {
+    position: relative;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: #ffffff;
+    letter-spacing: 3px;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #ffffff 0%, #a8c0ff 50%, #ffffff 100%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    &::before {
+      position: absolute;
+      top: 3px;
+      left: -16px;
+      display: inline-block;
+      width: 4px;
+      height: 24px;
+      content: "";
+      background: linear-gradient(180deg, var(--el-color-primary) 0%, #a8c0ff 100%);
+      border-radius: 2px;
+    }
+  }
+}
+.el-menu {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
+  border-bottom: none;
+  .el-menu-item,
+  :deep(.el-sub-menu__title) {
+    height: 40px;
+    margin: 8px 4px;
+    color: #b4b8c5 !important;
+    background-color: transparent !important;
+    border-bottom: none !important;
+    border-radius: 8px;
+    &:hover {
+      color: #ffffff !important;
+      background-color: rgb(255 255 255 / 8%) !important;
+    }
+  }
+  :deep(.el-sub-menu__hide-arrow) {
+    width: 65px;
+    height: 55px;
+  }
+  .el-menu-item.is-active {
+    font-weight: 500;
+    color: #ffffff !important;
+    background: linear-gradient(90deg, var(--el-color-primary) 0%, rgb(64 158 255 / 40%) 100%) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgb(64 158 255 / 30%);
+  }
+  :deep(.is-active) {
+    background: linear-gradient(90deg, var(--el-color-primary) 0%, rgb(64 158 255 / 40%) 100%) !important;
+    border-bottom: none !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgb(64 158 255 / 30%);
+    &::before {
+      width: 0;
+    }
+    .el-sub-menu__title {
+      font-weight: 500;
+      color: #ffffff !important;
+      background: transparent !important;
+      border-bottom: none !important;
+    }
+  }
+}
+
+@media screen and (width <= 730px) {
+  .logo {
+    display: none !important;
+  }
+}

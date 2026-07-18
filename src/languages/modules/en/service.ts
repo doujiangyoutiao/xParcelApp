@@ -1,0 +1,21 @@
+export default {
+  connected_providers: "Available Logistics Providers:",
+  service_list: "Service List",
+  provider: "Provider",
+  service_code: "Service Code",
+  remark: "Remark",
+  creation_time: "Created Time",
+  operation: "Actions",
+  edit_service: "Edit Service",
+  add_service: "Add Service",
+  related_parameters: "Parameters",
+  your_logistics_service_name: "Your Service Name",
+  please_enter_service_name: "Please enter service name",
+  remark_label: "Remark",
+  please_enter_remark: "Please enter remark",
+  please_enter: "Please enter",
+  cancel: "Cancel",
+  save: "Save",
+  update_success: "Updated successfully",
+  add_success: "Added successfully"
+};

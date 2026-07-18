@@ -1,0 +1,20 @@
+.form-padding {
+  padding: 16px;
+  .table-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    margin-bottom: 16px;
+    border: 1px dashed #cdd0d6;
+    border-radius: 8px;
+  }
+  .required {
+    font-weight: bold;
+    color: red;
+  }
+}
+:deep(.el-input-group__append, .el-input-group__prepend) {
+  padding: 0;
+  cursor: pointer;
+}
