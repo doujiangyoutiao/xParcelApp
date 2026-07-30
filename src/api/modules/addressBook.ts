@@ -5,20 +5,21 @@ import http from "@/api";
  */
 
 // 查询地址簿列表（支持分页、筛选、排序）
-export const getAddressBooks = (params?: any) => {
-  return http.get("/api/AddressBook", { ...params });
+export const getAddressBooks = (params?: any, options: any = {}) => {
+  return http.get("/api/AddressBook", { ...params }, options);
 };
 
 // 新增地址簿
-export const addAddressBook = (params: any) => {
-  return http.post("/api/AddressBook", params);
+export const addAddressBook = (params: any, options: any = {}) => {
+  return http.post("/api/AddressBook", params, options);
 };
 
-// 以下为需要新增的占位接口，请根据实际情况实现
-export const deleteAddressBook = (params: any) => {
-  console.log(params);
-  // TODO: 真实删除接口
-  return Promise.reject("接口未实现");
+export const updateAddressBook = (id: number, params: any) => {
+  return http.post(`/api/AddressBook/Update/${id}`, params);
+};
+
+export const deleteAddressBook = (id: number) => {
+  return http.post(`/api/AddressBook/Delete/${id}`, {});
 };
 
 export const getAddressBookForEdit = (params: any) => {

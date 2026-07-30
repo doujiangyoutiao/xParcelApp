@@ -12,43 +12,47 @@
   >
     <el-row :gutter="10">
       <!-- 姓名 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
+      <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
         <el-form-item :label="$t('orderentry.consignee_name')" prop="hawbRecipient.contact">
-          <el-input v-model="ruleForm.hawbRecipient.contact" :placeholder="$t('orderentry.Company_enter')" />
+          <el-autocomplete
+            v-model="ruleForm.hawbRecipient.contact"
+            class="address-book-autocomplete"
+            :fetch-suggestions="queryAddressBook"
+            :placeholder="$t('orderentry.Company_enter')"
+            :debounce="350"
+            :trigger-on-focus="false"
+            clearable
+            value-key="contact"
+            @select="handleSelectAddress"
+          >
+            <template #default="{ item }">
+              <div class="address-book-suggestion">
+                <span class="address-book-contact">{{ item.contact }}</span>
+                <span class="address-book-company">{{ item.company }}</span>
+              </div>
+            </template>
+          </el-autocomplete>
         </el-form-item>
       </el-col>
 
       <!-- 公司名称 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
+      <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
         <el-form-item :label="$t('orderentry.contact_person')" prop="hawbRecipient.company">
           <el-input v-model="ruleForm.hawbRecipient.company" :placeholder="$t('orderentry.contact_placeholder')" />
         </el-form-item>
       </el-col>
 
       <!-- 电话 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
+      <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
         <el-form-item :label="$t('orderentry.phone')" prop="hawbRecipient.phone">
           <el-input v-model="ruleForm.hawbRecipient.phone" :placeholder="$t('orderentry.please_enter')" />
         </el-form-item>
       </el-col>
 
       <!-- 邮箱 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
+      <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
         <el-form-item :label="$t('orderentry.email')" prop="hawbRecipient.email">
           <el-input v-model="ruleForm.hawbRecipient.email" :placeholder="$t('orderentry.please_enter')" />
-        </el-form-item>
-      </el-col>
-      <!-- 收件人EORI -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
-        <el-form-item :label="$t('orderentry.consigneeEORINumber')" prop="hawbRecipient.eORINumber">
-          <el-input v-model="ruleForm.hawbRecipient.eORINumber" :placeholder="$t('orderentry.please_enter')" />
-        </el-form-item>
-      </el-col>
-
-      <!-- 收件人VAT -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
-        <el-form-item :label="$t('orderentry.consigneeVATNumber')" prop="hawbRecipient.vATNumber">
-          <el-input v-model="ruleForm.hawbRecipient.vATNumber" :placeholder="$t('orderentry.please_enter')" />
         </el-form-item>
       </el-col>
 
@@ -56,8 +60,8 @@
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" :xxl="24">
         <el-row>
           <el-col :xs="12" :sm="12" :md="6" :lg="6" :xl="6">
-            <el-form-item :label="$t('orderentry.country')" prop="hawbRecipient.Country">
-              <el-select v-model="ruleForm.hawbRecipient.Country" :placeholder="$t('orderentry.please_select')" filterable>
+            <el-form-item :label="$t('orderentry.country')" prop="hawbRecipient.country">
+              <el-select v-model="ruleForm.hawbRecipient.country" :placeholder="$t('orderentry.please_select')" filterable>
                 <el-option v-for="item in countryList" :key="item.code" :label="item.code" :value="item.code" />
               </el-select>
             </el-form-item>
@@ -92,6 +96,12 @@
           <el-input v-model="ruleForm.hawbRecipient.street" :placeholder="$t('orderentry.please_enter')" />
         </el-form-item>
       </el-col>
+
+      <el-col :span="24">
+        <el-checkbox v-model="ruleForm.saveToAddressBook">
+          {{ $t("orderentry.save_address_book") }}
+        </el-checkbox>
+      </el-col>
     </el-row>
   </el-form>
 </template>
@@ -101,6 +111,7 @@ import { reactive, ref, onMounted } from "vue";
 import { FormInstance } from "element-plus";
 
 import { getCountryList } from "@/api/modules/setting";
+import { getAddressBooks } from "@/api/modules/addressBook";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 // const iconStyle = ref({
@@ -112,6 +123,7 @@ const { t } = useI18n();
 // });
 // 表单数据模型
 const ruleForm = reactive({
+  saveToAddressBook: true,
   hawbRecipient: {
     company: undefined,
     contact: undefined,
@@ -132,11 +144,78 @@ const ruleFormRef = ref<FormInstance>();
 
 //const dialogVisible = ref(false); // 控制对话框显示与隐藏
 const countryList = ref<any>([]);
+const addressBookCache = new Map<string, any[]>();
+let addressBookRequestId = 0;
 const handleGetCountryList = () => {
   getCountryList().then(r => {
     countryList.value = (r as any).Data;
   });
 };
+
+const getAddressBookItems = (res: any) => {
+  const payload = res?.Data || res?.data || res || {};
+  const items = payload.Items || payload.items || payload.Data || payload.data || [];
+  return Array.isArray(items) ? items : [];
+};
+
+const queryAddressBook = async (queryString: string, cb: (results: any[]) => void) => {
+  const keyword = queryString.trim().toLowerCase();
+  if (!keyword) {
+    cb([]);
+    return;
+  }
+
+  const cachedItems = addressBookCache.get(keyword);
+  if (cachedItems) {
+    cb(cachedItems);
+    return;
+  }
+
+  const currentRequestId = ++addressBookRequestId;
+  try {
+    const res = await getAddressBooks(
+      {
+        pageNumber: 1,
+        pageSize: 8,
+        filterOn: "contact",
+        filterQuery: keyword
+      },
+      {
+        loading: false,
+        noShowErrorTooltips: true
+      }
+    );
+    const items = getAddressBookItems(res).map(item => ({
+      ...item,
+      value: item.contact
+    }));
+    addressBookCache.set(keyword, items);
+
+    if (currentRequestId === addressBookRequestId) {
+      cb(items);
+    }
+  } catch (error) {
+    console.error(error);
+    if (currentRequestId === addressBookRequestId) {
+      cb([]);
+    }
+  }
+};
+
+const handleSelectAddress = (item: any) => {
+  ruleForm.hawbRecipient.contact = item.contact || "";
+  ruleForm.hawbRecipient.company = item.company || "";
+  ruleForm.hawbRecipient.phone = item.phone || "";
+  ruleForm.hawbRecipient.email = item.email || "";
+  ruleForm.hawbRecipient.country = item.country || "";
+  ruleForm.hawbRecipient.Country = item.country || "";
+  ruleForm.hawbRecipient.state = item.state || "";
+  ruleForm.hawbRecipient.city = item.city || "";
+  ruleForm.hawbRecipient.postalCode = item.postalCode || "";
+  ruleForm.hawbRecipient.houseNo = item.houseNo || "";
+  ruleForm.hawbRecipient.street = item.street || "";
+};
+
 onMounted(() => {
   handleGetCountryList();
 });
@@ -184,6 +263,7 @@ const getParams = async (v: boolean = false) => {
 
 const resetForm = () => {
   ruleFormRef.value?.resetFields();
+  ruleForm.saveToAddressBook = true;
 };
 const changeRuleForm = (formData: any) => {
   Object.assign(ruleForm, formData);
@@ -193,4 +273,29 @@ defineExpose({ getParams, resetForm, changeRuleForm });
 
 <style lang="scss" scoped>
 @import "../index";
+.address-book-autocomplete {
+  width: 100%;
+}
+.address-book-suggestion {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 260px;
+  line-height: 28px;
+}
+.address-book-contact {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.address-book-company {
+  flex: 0 0 auto;
+  max-width: 150px;
+  overflow: hidden;
+  color: #909399;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

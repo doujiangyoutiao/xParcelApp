@@ -41,6 +41,34 @@
           </el-select>
         </el-form-item>
       </el-col>
+
+      <!-- 收件人EORI -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" :xxl="12">
+        <el-form-item :label="$t('orderentry.consigneeEORINumber')" prop="hawbRecipient.eORINumber">
+          <el-input v-model="ruleForm.hawbRecipient.eORINumber" :placeholder="$t('orderentry.please_enter')" />
+        </el-form-item>
+      </el-col>
+
+      <!-- 收件人VAT -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" :xxl="12">
+        <el-form-item :label="$t('orderentry.consigneeVATNumber')" prop="hawbRecipient.vATNumber">
+          <el-input v-model="ruleForm.hawbRecipient.vATNumber" :placeholder="$t('orderentry.please_enter')" />
+        </el-form-item>
+      </el-col>
+
+      <!-- 发件人EORI -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" :xxl="12">
+        <el-form-item :label="$t('orderentry.shipperEoriNumber')" prop="hawbSender.eORINumber">
+          <el-input v-model="ruleForm.hawbSender.eORINumber" :placeholder="$t('orderentry.please_enter')" />
+        </el-form-item>
+      </el-col>
+
+      <!-- 发件人VAT -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" :xxl="12">
+        <el-form-item :label="$t('orderentry.shipperVATNumber_IOSS')" prop="hawbSender.vATNumber">
+          <el-input v-model="ruleForm.hawbSender.vATNumber" :placeholder="$t('orderentry.please_enter')" />
+        </el-form-item>
+      </el-col>
     </el-row>
   </el-form>
 </template>
@@ -53,7 +81,15 @@ const { t } = useI18n();
 const ruleForm = reactive({
   dutyType: "DDU",
   shipmentType: 20,
-  paymentType: "Acc/Prepaid"
+  paymentType: "Acc/Prepaid",
+  hawbRecipient: {
+    eORINumber: undefined,
+    vATNumber: undefined
+  },
+  hawbSender: {
+    eORINumber: undefined,
+    vATNumber: undefined
+  }
 }) as any;
 
 const ruleFormRef = ref<FormInstance>();
@@ -84,6 +120,10 @@ const resetForm = () => {
 };
 const changeRuleForm = (formData: any) => {
   Object.assign(ruleForm, formData);
+  if (formData.receiverEoriNumber !== undefined) ruleForm.hawbRecipient.eORINumber = formData.receiverEoriNumber;
+  if (formData.receiverVATNumber !== undefined) ruleForm.hawbRecipient.vATNumber = formData.receiverVATNumber;
+  if (formData.shipperEoriNumber !== undefined) ruleForm.hawbSender.eORINumber = formData.shipperEoriNumber;
+  if (formData.shipperVATNumber !== undefined) ruleForm.hawbSender.vATNumber = formData.shipperVATNumber;
 };
 defineExpose({ getParams, resetForm, changeRuleForm });
 </script>

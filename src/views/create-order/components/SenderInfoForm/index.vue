@@ -17,7 +17,7 @@
           prop="hawbSender.contact"
           :rules="[{ required: true, message: t('orderentry.please_enter'), trigger: 'change' }]"
         >
-          <el-input v-model="ruleForm.hawbSender.contact"> </el-input>
+          <el-input v-model="ruleForm.hawbSender.contact" />
         </el-form-item>
       </el-col>
 
@@ -57,22 +57,8 @@
         </el-form-item>
       </el-col>
 
-      <!-- 发件人EORI -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
-        <el-form-item :label="$t('orderentry.shipperEoriNumber')" prop="hawbSender.eORINumber">
-          <el-input v-model="ruleForm.hawbSender.eORINumber" :placeholder="$t('orderentry.please_enter')" />
-        </el-form-item>
-      </el-col>
-
-      <!-- 发件人VAT -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
-        <el-form-item :label="$t('orderentry.shipperVATNumber_IOSS')" prop="hawbSender.vATNumber">
-          <el-input v-model="ruleForm.hawbSender.vATNumber" :placeholder="$t('orderentry.please_enter')" />
-        </el-form-item>
-      </el-col>
-
       <!-- 地址 -->
-      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" :xxl="24">
+      <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" :xxl="12">
         <el-form-item
           :label="$t('orderentry.address')"
           prop="hawbSender.street"

@@ -164,6 +164,7 @@ import OtherInfoItem from "./components/OtherInfoItem/index.vue"; // 引入其�
 import ReceiverInfoForm from "./components/ReceiverInfoForm/index.vue"; // 引入收件人信息表单组件
 import OrderDetails from "@/components/OrderDetails/index.vue";
 import { createOrder, printInvoice } from "@/api/modules/createOrder";
+import { addAddressBook, getAddressBooks } from "@/api/modules/addressBook";
 import { getOrderDetailById } from "@/api/modules/orderList";
 //import { localGet } from "@/utils/index";
 import { useRoute } from "vue-router";
@@ -207,10 +208,14 @@ const handleGetHawbDetails = (id: any) => {
       shipmentType: parseInt(inputData.shipmentType, 10),
       paymentType: inputData.paymentType,
       insuranceValue: inputData.insuranceValue,
-      receiverEoriNumber: inputData.receiverEoriNumber,
-      receiverVATNumber: inputData.receiverVATNumber,
-      shipperEoriNumber: inputData.shipperEoriNumber,
-      shipperVATNumber: inputData.shipperVATNumber,
+      hawbRecipient: {
+        eORINumber: inputData.receiverEoriNumber,
+        vATNumber: inputData.receiverVATNumber
+      },
+      hawbSender: {
+        eORINumber: inputData.shipperEoriNumber,
+        vATNumber: inputData.shipperVATNumber
+      },
       exportTaxId: inputData.exportTaxId,
       cIFCost: inputData.cifCost,
       cIFCostCurrency: inputData.cifCostCurrency
@@ -356,6 +361,56 @@ const itemParams = ref<any>({});
 const otherParams = ref<any>({});
 const pickupParams = ref<any>({});
 const resultInfo = ref<any>({});
+
+const buildAddressBookPayload = (recipient: any = {}) => ({
+  addressType: "Consignee",
+  contact: recipient.contact || "",
+  company: recipient.company || "",
+  phone: recipient.phone || "",
+  email: recipient.email || "",
+  country: recipient.country || recipient.Country || "",
+  state: recipient.state || "",
+  city: recipient.city || "",
+  postalCode: recipient.postalCode || "",
+  houseNo: recipient.houseNo || "",
+  street: recipient.street || ""
+});
+
+const normalizeAddressValue = (value: any) => `${value || ""}`.trim().toLowerCase();
+const isSameAddress = (address: any, payload: any) => {
+  return ["contact", "company", "phone", "email", "country", "state", "city", "postalCode", "houseNo", "street"].every(
+    key => normalizeAddressValue(address?.[key]) === normalizeAddressValue(payload?.[key])
+  );
+};
+
+const saveRecipientToAddressBook = async (recipient: any, enabled: boolean) => {
+  const payload = buildAddressBookPayload(recipient);
+  if (!enabled || !payload.contact || !payload.company || !payload.phone || !payload.country || !payload.street) {
+    return;
+  }
+
+  try {
+    const res: any = await getAddressBooks(
+      {
+        pageNumber: 1,
+        pageSize: 20,
+        filterOn: "contact",
+        filterQuery: payload.contact
+      },
+      { loading: false, noShowErrorTooltips: true }
+    );
+    const data = res?.Data || res?.data || res || {};
+    const items = data.Items || data.items || data.Data || data.data || [];
+    if (Array.isArray(items) && items.some(item => isSameAddress(item, payload))) {
+      return;
+    }
+
+    await addAddressBook(payload, { loading: false, noShowErrorTooltips: true });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 // 合并所有表单的字段数据
 const getAllFormParams = () => {
   Promise.all([
@@ -371,13 +426,24 @@ const getAllFormParams = () => {
       return;
     }
 
-    // ItemInfoFormRef.value?.handleSaveToAddressBook();
-
-    const params = { ...r[0], ...r[1], ...r[2], ...r[3], ...r[4], dataFrom: "OrderEntry" };
+    const otherInfo = r[4] || {};
+    const shouldSaveRecipientAddress = !!r[1]?.saveToAddressBook;
+    const params = {
+      ...r[0],
+      ...r[1],
+      ...r[2],
+      ...r[3],
+      ...otherInfo,
+      hawbSender: { ...(r[0]?.hawbSender || {}), ...(otherInfo.hawbSender || {}) },
+      hawbRecipient: { ...(r[1]?.hawbRecipient || {}), ...(otherInfo.hawbRecipient || {}) },
+      dataFrom: "OrderEntry"
+    };
+    delete params.saveToAddressBook;
     // delete params.customerPickupDto.booking;
     createOrder(params)
       .then((r: any) => {
         if (r.Data.result) {
+          saveRecipientToAddressBook(params.hawbRecipient, shouldSaveRecipientAddress);
           resultInfo.value = r.Data;
           successDialogVisible.value = true;
         } else {
