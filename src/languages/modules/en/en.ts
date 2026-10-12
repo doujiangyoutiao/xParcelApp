@@ -34,6 +34,7 @@ export default {
     exitFullScreen: "Exit Full Screen",
     personalData: "Personal Data",
     changePassword: "Change Password",
+    companyProfile: "Company Profile",
     logout: "Logout"
   },
   orderlist,

@@ -91,7 +91,7 @@
         </el-row>
       </el-collapse-item>
     </el-collapse>
-    <el-dialog align-center class="success-order-dialog" width="475px" v-model="successDialogVisible">
+    <el-dialog align-center class="success-order-dialog" width="520px" v-model="successDialogVisible">
       <div class="success-tips">
         <div class="icon-container">
           <img src="https://internal.hub-ez.com/hubez_ui/img/success.svg" alt="" srcset="" />
@@ -99,46 +99,43 @@
         <span class="title">
           {{ $t("orderentry.order_uploaded_successfully") }}
         </span>
-        <div class="order-no">
-          <span>{{ $t("orderentry.thetracking_number") }}</span>
-          <span>
-            <el-link
-              @click="handleToOrderDetail(resultInfo.shipmentNo)"
-              style="align-items: center; justify-content: center; padding: 0 2px 1px"
-              type="primary"
-              aria-label="Copy HAWB Number"
-            >
-              &nbsp;#{{ resultInfo.shipmentNo }}
-            </el-link>
-          </span>
-          <span
-            style="position: relative; top: 2px; width: 16px; height: 16px; color: rgb(168 171 178 / 100%); cursor: pointer"
-            @click="copyToClipboard(resultInfo.shipmentNo)"
+        <div class="success-subtitle">
+          {{ $t("orderentry.thetracking_number") }}
+        </div>
+        <div class="order-no-card">
+          <el-link
+            @click="handleToOrderDetail(resultInfo.shipmentNo)"
+            class="order-no-link"
+            type="primary"
+            aria-label="Copy HAWB Number"
           >
-            <el-icon style="top: -3px !important"><CopyDocument style="width: 14.48px; height: 14px" /></el-icon>
-          </span>
+            #{{ resultInfo.shipmentNo }}
+          </el-link>
+          <el-button text class="copy-order-no-btn" @click="copyToClipboard(resultInfo.shipmentNo)">
+            <el-icon><CopyDocument /></el-icon>
+          </el-button>
         </div>
         <div class="print-container">
-          <el-link @click="handlePrintTag" type="primary" style="margin-right: 39px">
-            <span class="ic">
+          <button type="button" class="print-action" @click="handlePrintTag">
+            <span class="print-action__icon">
               <el-icon><Printer /></el-icon>
             </span>
-            <span class="container-span">{{ $t("orderentry.print_label") }}</span>
-          </el-link>
-          <el-link @click="handlePrintInvice" type="primary">
-            <span class="ic">
+            <span class="print-action__text">{{ $t("orderentry.print_label") }}</span>
+          </button>
+          <button type="button" class="print-action" @click="handlePrintInvice">
+            <span class="print-action__icon">
               <el-icon><Printer /></el-icon>
             </span>
-            <span class="container-span">{{ $t("orderentry.print_invoice") }}</span>
-          </el-link>
+            <span class="print-action__text">{{ $t("orderentry.print_invoice") }}</span>
+          </button>
         </div>
         <div class="btn-container">
-          <el-button style="margin-right: 12px" @click="successDialogVisible = false" class="btn-button">{{
-            $t("orderentry.copy_new_order")
-          }}</el-button>
-          <el-button @click="handleGoOnOrder" type="primary" class="btn-button-pr">{{
-            $t("orderentry.place_next_order")
-          }}</el-button>
+          <el-button @click="successDialogVisible = false" class="btn-button">
+            {{ $t("orderentry.copy_new_order") }}
+          </el-button>
+          <el-button @click="handleGoOnOrder" type="primary" class="btn-button-pr">
+            {{ $t("orderentry.place_next_order") }}
+          </el-button>
         </div>
       </div>
     </el-dialog>
@@ -372,13 +369,12 @@ const buildAddressBookPayload = (recipient: any = {}) => ({
   state: recipient.state || "",
   city: recipient.city || "",
   postalCode: recipient.postalCode || "",
-  houseNo: recipient.houseNo || "",
   street: recipient.street || ""
 });
 
 const normalizeAddressValue = (value: any) => `${value || ""}`.trim().toLowerCase();
 const isSameAddress = (address: any, payload: any) => {
-  return ["contact", "company", "phone", "email", "country", "state", "city", "postalCode", "houseNo", "street"].every(
+  return ["contact", "company", "phone", "email", "country", "state", "city", "postalCode", "street"].every(
     key => normalizeAddressValue(address?.[key]) === normalizeAddressValue(payload?.[key])
   );
 };
@@ -488,15 +484,19 @@ const handleToOrderDetail = (shipmentNo: any) => {
 
 <style lang="scss" scoped>
 :deep(.success-order-dialog.el-dialog) {
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgb(20 38 52 / 18%);
   .el-dialog__header {
-    background: #ffffff;
-    border-bottom: 1px solid #ffffff;
+    margin-right: 0;
+    background: linear-gradient(180deg, #f5fbfb 0%, #ffffff 100%);
+    border-bottom: none;
     .el-dialog__headerbtn .el-dialog__close {
-      top: 8px;
-      left: -8px;
-      width: 23.8px;
-      height: 23.8px;
-      color: rgb(192 196 204 / 100%);
+      top: 14px;
+      left: -2px;
+      width: 20px;
+      height: 20px;
+      color: rgb(132 145 156 / 100%);
       svg {
         width: 100%;
         height: 100%;
@@ -504,7 +504,7 @@ const handleToOrderDetail = (shipmentNo: any) => {
     }
   }
   .el-dialog__body {
-    padding-top: 3px !important;
+    padding: 8px 24px 24px !important;
   }
 }
 .success-tips {
@@ -516,91 +516,125 @@ const handleToOrderDetail = (shipmentNo: any) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 60px;
-    font-size: 24px;
+    width: 78px;
+    height: 78px;
+    margin-top: 4px;
+    background: radial-gradient(circle at center, rgb(0 144 148 / 10%) 0%, rgb(0 144 148 / 4%) 58%, transparent 60%);
     border-radius: 50%;
     img {
-      width: 40px;
+      width: 42px;
     }
   }
   .title {
-    min-width: 114px;
-    height: 24px;
     padding-top: 8px;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 24px;
-    color: var(--el-color-primary);
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #12313a;
     text-align: center;
-    vertical-align: middle;
   }
-  .order-no {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 286px;
-    height: 25px;
-    margin-top: 14px;
-    font-size: 14px;
+  .success-subtitle {
+    margin-top: 10px;
+    font-size: 13px;
     font-weight: 500;
-    line-height: 22px;
-    color: rgb(144 147 153 / 100%);
-    vertical-align: middle;
+    line-height: 1.4;
+    color: #6b7a88;
+  }
+  .order-no-card {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    max-width: 360px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    background: #f7fafb;
+    border: 1px solid #e0eaee;
+    border-radius: 12px;
+  }
+  .order-no-link {
+    flex: 1;
+    justify-content: flex-start;
+    overflow: hidden;
+    font-family: DIN, monospace;
+    font-size: 19px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .copy-order-no-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: #7a8794;
   }
   .print-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .print-action {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 12px 14px;
+    color: #1d2f36;
+    cursor: pointer;
+    background: #ffffff;
+    border: 1px solid #dde8eb;
+    border-radius: 12px;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+    &:hover {
+      border-color: #97d9d5;
+      box-shadow: 0 10px 24px rgb(0 144 148 / 10%);
+      transform: translateY(-1px);
+    }
+  }
+  .print-action__icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 208px;
-    height: 22px;
-    margin-top: 8px;
-    .ic {
-      position: relative;
-      top: 1px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      margin-right: 4px;
-      font-size: 12px;
-      color: #ffffff;
-      background-color: rgb(0 144 148 / 100%);
-      border-radius: 50%;
-    }
-    .container-span {
-      min-width: 56px;
-      height: 22px;
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 22px;
-    }
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    color: #ffffff;
+    background: #009094;
+    border-radius: 50%;
+  }
+  .print-action__text {
+    font-size: 14px;
+    font-weight: 700;
   }
   .btn-container {
     display: flex;
-    justify-content: center;
+    gap: 12px;
     width: 100%;
-    margin-top: 24px;
-    margin-bottom: 19px;
+    margin-top: 20px;
     .btn-button {
-      min-width: 88px;
-      min-height: 24px;
-      max-height: 40px;
+      flex: 1;
+      min-height: 42px;
       font-size: 14px;
-      font-weight: 400;
-      line-height: 22px;
+      font-weight: 700;
       color: #1b1c1e;
-      border-radius: 4px;
+      background: #f4f7f8;
+      border-color: #dbe6ea;
+      border-radius: 10px;
     }
     .btn-button-pr {
-      min-width: 88px;
-      min-height: 24px;
-      max-height: 40px;
+      flex: 1;
+      min-height: 42px;
       font-size: 14px;
-      font-weight: 400;
-      line-height: 22px;
-      border-radius: 4px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #009094 0%, #00ab9c 100%);
+      border: none;
+      border-radius: 10px;
     }
   }
 }

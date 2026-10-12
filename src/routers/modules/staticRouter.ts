@@ -23,7 +23,73 @@ export const staticRouter: RouteRecordRaw[] = [
     component: () => import("@/layouts/index.vue"),
     // component: () => import("@/layouts/indexAsync.vue"),
     redirect: HOME_URL,
-    children: []
+    children: [
+      {
+        path: "/change-password",
+        name: "change-password",
+        component: () => import("@/views/change-password/index.vue"),
+        meta: {
+          title: "Change Password",
+          icon: "Lock",
+          isHide: true,
+          isFull: false,
+          isAffix: false,
+          isKeepAlive: false
+        }
+      },
+      {
+        path: "/company-profile",
+        name: "company-profile",
+        component: () => import("@/views/company-profile/index.vue"),
+        meta: {
+          title: "Company Profile",
+          icon: "OfficeBuilding",
+          isHide: true,
+          isFull: false,
+          isAffix: false,
+          isKeepAlive: false
+        }
+      },
+      {
+        path: "/tracking/index",
+        name: "tracking",
+        component: () => import("@/views/tracking/index.vue"),
+        meta: {
+          title: "Tracking",
+          icon: "Van",
+          isHide: true,
+          isFull: false,
+          isAffix: false,
+          isKeepAlive: false
+        }
+      },
+      {
+        path: "/user-management/index",
+        name: "user-management",
+        component: () => import("@/views/user-management/index.vue"),
+        meta: {
+          title: "User Management",
+          icon: "UserFilled",
+          isHide: true,
+          isFull: false,
+          isAffix: false,
+          isKeepAlive: false
+        }
+      },
+      {
+        path: "/quotes/index",
+        name: "quotes",
+        component: () => import("@/views/quotes/index.vue"),
+        meta: {
+          title: "Quotes",
+          icon: "Tickets",
+          isHide: true,
+          isFull: false,
+          isAffix: false,
+          isKeepAlive: false
+        }
+      }
+    ]
   }
 ];
 

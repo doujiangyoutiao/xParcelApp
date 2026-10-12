@@ -15,9 +15,29 @@ export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   noShowErrorTooltips?: boolean;
 }
 
+const apiBaseURL = ((import.meta.env.VITE_API_URL as string) || "").replace(/^["']|["']$/g, "");
+
+const isAbsoluteUrl = (url: string) => /^(https?:)?\/\//i.test(url);
+
+export const normalizeRequestUrl = (url: string) => {
+  if (!url || isAbsoluteUrl(url)) return url;
+  return url.replace(/^\/+/, "");
+};
+
+export const resolveAppUrl = (path: string) => {
+  if (!path) return window.location.href;
+  if (isAbsoluteUrl(path)) return path;
+
+  const normalizedPath = path.replace(/^\/+/, "");
+  const currentPath = window.location.pathname;
+  const basePath = currentPath.endsWith("/") ? currentPath : currentPath.replace(/[^/]+$/, "");
+
+  return new URL(normalizedPath, `${window.location.origin}${basePath}`).toString();
+};
+
 const config = {
   // 默认地址请求地址，可在 .env.** 文件中修改
-  baseURL: import.meta.env.VITE_API_URL as string,
+  baseURL: apiBaseURL,
   // 设置超时时间
   timeout: ResultEnum.TIMEOUT as number,
   // 跨域时候允许携带凭证
@@ -135,19 +155,19 @@ class RequestHttp {
    * @description 常用请求方法封装
    */
   get<T>(url: string, params?: object, _object = {}): Promise<ResultData<T>> {
-    return this.service.get(url, { params, ..._object });
+    return this.service.get(normalizeRequestUrl(url), { params, ..._object });
   }
   post<T>(url: string, params?: object | string, _object = {}): Promise<ResultData<T>> {
-    return this.service.post(url, params, _object);
+    return this.service.post(normalizeRequestUrl(url), params, _object);
   }
   put<T>(url: string, params?: object, _object = {}): Promise<ResultData<T>> {
-    return this.service.put(url, params, _object);
+    return this.service.put(normalizeRequestUrl(url), params, _object);
   }
   delete<T>(url: string, data?: any, _object = {}): Promise<ResultData<T>> {
-    return this.service.delete(url, { data, ..._object });
+    return this.service.delete(normalizeRequestUrl(url), { data, ..._object });
   }
   download(url: string, params?: object, _object = {}): Promise<BlobPart> {
-    return this.service.post(url, params, { ..._object, responseType: "blob" });
+    return this.service.post(normalizeRequestUrl(url), params, { ..._object, responseType: "blob" });
   }
 }
 

@@ -13,6 +13,8 @@ export default {
   Company_enter: "请输入",
   city: "城市",
   address: "地址",
+  address_book: "地址簿",
+  address_book_search_placeholder: "搜索联系人或公司",
   save_address_book: "保存到地址簿",
   consignee_info: "收件人信息",
   email: "邮箱",

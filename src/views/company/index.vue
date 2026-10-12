@@ -15,7 +15,7 @@
       <el-table-column prop="email" :label="t('company.email')" width="180" />
       <el-table-column prop="countryId" :label="t('company.country')" width="120">
         <template #default="scope">
-          {{ countryList.find(c => c.code === scope.row.countryId)?.name || scope.row.countryId }}
+          {{ formatCountryDisplayName(countryList.find(c => c.code === scope.row.countryId)?.name) || scope.row.countryId }}
         </template>
       </el-table-column>
       <el-table-column prop="remark" :label="t('company.remark')" min-width="150" show-overflow-tooltip />
@@ -52,7 +52,7 @@
           <el-col :span="12">
             <el-form-item :label="t('company.country')" prop="countryId">
               <el-select v-model="formData.countryId" :placeholder="t('company.please_select_country')" clearable filterable>
-                <el-option v-for="item in countryList" :key="item.id" :label="item.name" :value="item.id" />
+                <el-option v-for="item in countryList" :key="item.id" :label="item.name" :value="item.code" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -97,6 +97,7 @@ import { ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Plus, Delete, EditPen } from "@element-plus/icons-vue";
 import { getCompanyList, addCompany, updateCompany, deleteCompany, getCountries } from "@/api/modules/company";
 import { useI18n } from "vue-i18n";
+import { formatCountryDisplayName } from "@/utils";
 
 const { t } = useI18n();
 

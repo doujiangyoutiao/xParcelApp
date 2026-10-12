@@ -1,9 +1,9 @@
 <template>
   <div class="footer flx-center">
-    <a href="https://github.com/HalseySpicy" target="_blank"> 2022 © Geeker-Admin By Geeker Technology. </a>
+    <span>© 2024 X Parcel. All rights reserved.</span>
   </div>
 </template>
 
 <style scoped lang="scss">
-@import "./index.scss";
+@import "./index";
 </style>

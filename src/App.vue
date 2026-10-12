@@ -7,7 +7,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { getBrowserLang } from "@/utils";
 import { useTheme } from "@/hooks/useTheme";
 import { ElConfigProvider } from "element-plus";
 import { LanguageType } from "./stores/interface";
@@ -24,7 +23,7 @@ initTheme();
 // init language
 const i18n = useI18n();
 onMounted(() => {
-  const language = globalStore.language ?? getBrowserLang();
+  const language = globalStore.language ?? "en";
   i18n.locale.value = language;
   globalStore.setGlobalState("language", language as LanguageType);
 });
@@ -33,7 +32,7 @@ onMounted(() => {
 const locale = computed(() => {
   if (globalStore.language == "zh") return zhCn;
   if (globalStore.language == "en") return en;
-  return getBrowserLang() == "zh" ? zhCn : en;
+  return en;
 });
 
 // element assemblySize

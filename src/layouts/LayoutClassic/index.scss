@@ -24,14 +24,23 @@
       width: auto;
       margin-right: 40px;
       .logo-img {
-        display: none;
+        display: block;
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+        object-fit: contain;
+        background: #ffffff;
+        border-radius: 6px;
       }
       .logo-text {
         position: relative;
+        overflow: hidden;
         font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
         font-size: 24px;
         font-weight: 300;
         color: #ffffff;
+        text-overflow: ellipsis;
         letter-spacing: 3px;
         white-space: nowrap;
         background: linear-gradient(135deg, #ffffff 0%, #a8c0ff 50%, #ffffff 100%);

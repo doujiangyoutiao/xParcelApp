@@ -3,6 +3,7 @@ import { AuthState } from "@/stores/interface";
 //import { getAuthButtonListApi, getAuthMenuListApi } from "@/api/modules/login";
 import { getFlatMenuList, getShowMenuList, getAllBreadcrumbList } from "@/utils";
 import { localGet } from "@/utils";
+import { normalizeMenuIcons } from "@/utils/menuIcon";
 export const useAuthStore = defineStore({
   id: "geeker-auth",
   state: (): AuthState => ({
@@ -29,7 +30,7 @@ export const useAuthStore = defineStore({
     // Get AuthButtonList
     // Get AuthMenuList
     setAuthMenuList() {
-      this.authMenuList = localGet("menuList");
+      this.authMenuList = normalizeMenuIcons(localGet("menuList") || []);
     },
     // Set RouteName
     setRouteName(name: string) {

@@ -13,6 +13,8 @@ export default {
   Company_enter: "Please enter(company name or contact person)",
   city: "City",
   address: "Address",
+  address_book: "Address Book",
+  address_book_search_placeholder: "Search contact or company",
   save_address_book: "Save to Address Book",
   consignee_info: "Consignee Info",
   email: "Email",

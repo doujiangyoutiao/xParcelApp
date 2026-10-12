@@ -4,7 +4,7 @@
     <el-aside>
       <div class="aside-box" :style="{ width: isCollapse ? '65px' : '210px' }">
         <div class="logo flx-center">
-          <img class="logo-img" src="@/assets/images/logo.svg" alt="logo" />
+          <img v-if="logoUrl" class="logo-img brand-logo-img" :src="logoUrl" alt="logo" />
           <span v-show="!isCollapse" class="logo-text">{{ title }}</span>
         </div>
         <el-scrollbar>
@@ -39,8 +39,9 @@ import Main from "@/layouts/components/Main/index.vue";
 import ToolBarLeft from "@/layouts/components/Header/ToolBarLeft.vue";
 import ToolBarRight from "@/layouts/components/Header/ToolBarRight.vue";
 import SubMenu from "@/layouts/components/Menu/SubMenu.vue";
+import { useBranding } from "@/utils/branding";
 
-const title = import.meta.env.VITE_GLOB_APP_TITLE;
+const { title, logoUrl } = useBranding();
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -52,5 +53,5 @@ const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu
 </script>
 
 <style scoped lang="scss">
-@import "./index.scss";
+@import "./index";
 </style>

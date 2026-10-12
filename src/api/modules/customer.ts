@@ -33,3 +33,8 @@ export const updateCustomer = (id: number, params: any) => {
 export const deleteCustomer = (id: number) => {
   return http.post(`/api/Customers/DeleteCustomer/${id}`);
 };
+
+/** 获取客户 H5 下单链接 */
+export const getCustomerMobileOrderLink = (id: number) => {
+  return http.get(`/api/Customers/${id}/MobileOrderLink`);
+};

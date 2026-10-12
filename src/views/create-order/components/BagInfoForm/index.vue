@@ -21,7 +21,22 @@
       <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" :xxl="12">
         <el-form-item :label="$t('orderentry.shipping_service')" prop="receiverCountryId">
           <el-select v-model="ruleForm.serviceCode" :placeholder="$t('orderentry.please_select')" filterable>
-            <el-option v-for="item in formattedServices" :key="item.id" :label="item.serviceCode" :value="item.serviceCode" />
+            <el-option v-for="item in formattedServices" :key="item.id" :label="item.serviceCode" :value="item.serviceCode">
+              <div class="service-option">
+                <span class="provider-logo-wrap">
+                  <img
+                    v-if="getProviderLogoUrl(item.companyLogo)"
+                    class="provider-logo"
+                    :src="getProviderLogoUrl(item.companyLogo)"
+                    :alt="item.coloaderCode || item.serviceCode"
+                  />
+                  <span v-else class="provider-logo-fallback">
+                    {{ getProviderInitial(item.coloaderCode || item.serviceCode) }}
+                  </span>
+                </span>
+                <span>{{ item.serviceCode }}</span>
+              </div>
+            </el-option>
           </el-select>
         </el-form-item>
       </el-col>
@@ -77,6 +92,7 @@ import type { FormInstance } from "element-plus";
 import { ElInput, ElForm, ElFormItem, ElRow, ElCol } from "element-plus";
 import { getServiceForSpanner } from "@/api/modules/createOrder";
 import { useI18n } from "vue-i18n";
+import { getProviderInitial, getProviderLogoUrl } from "@/utils/providerLogo";
 const { t } = useI18n();
 const serviceList = ref<any>([]);
 const loadingServiceListSelect = () => {
@@ -153,4 +169,33 @@ defineExpose({ getParams, resetForm, changeRuleForm });
 
 <style lang="scss" scoped>
 @import "../index";
+.service-option {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+.provider-logo-wrap {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 24px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 4px;
+}
+.provider-logo {
+  max-width: 32px;
+  max-height: 18px;
+  object-fit: contain;
+}
+.provider-logo-fallback {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--el-text-color-secondary);
+}
 </style>

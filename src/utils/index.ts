@@ -134,6 +134,15 @@ export function getBrowserLang() {
   return defaultBrowserLang;
 }
 
+export function formatCountryDisplayName(value?: string | null) {
+  const countryName = String(value || "").trim();
+  const displayMap: Record<string, string> = {
+    "Hong Kong S.A.R.": "Hong Kong",
+    "Macao S.A.R.": "Macao"
+  };
+  return displayMap[countryName] || countryName;
+}
+
 /**
  * @description 获取不同路由模式所对应的 url + params
  * @returns {String}

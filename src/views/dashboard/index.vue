@@ -1,367 +1,857 @@
 <template>
-  <div class="dashboard-placeholder">
-    <div class="scene">
-      <!-- 星空背景粒子 -->
-      <div class="stars">
-        <span v-for="n in 50" :key="n" class="star" :style="starStyle()"></span>
+  <div class="dashboard-page">
+    <div class="dashboard-header">
+      <div>
+        <h2>Dashboard</h2>
+        <p>{{ dashboardSubtitle }}</p>
       </div>
-
-      <!-- 主体插画：火箭 -->
-      <div class="rocket-container">
-        <div class="rocket">
-          <svg width="120" height="160" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- 火箭主体 -->
-            <path
-              d="M60 10 C60 10, 30 50, 30 90 L30 110 L90 110 L90 90 C90 50, 60 10, 60 10Z"
-              fill="url(#rocketGrad)"
-              stroke="rgba(255,255,255,0.2)"
-              stroke-width="1"
-            />
-            <!-- 火箭头 -->
-            <path d="M60 10 C60 10, 48 30, 45 50 L75 50 C72 30, 60 10, 60 10Z" fill="#009688" opacity="0.9" />
-            <!-- 火箭窗户 -->
-            <circle cx="60" cy="70" r="12" fill="#1a1f2e" stroke="#009688" stroke-width="2" />
-            <circle cx="60" cy="70" r="8" fill="url(#windowGrad)" />
-            <circle cx="57" cy="67" r="3" fill="rgba(255,255,255,0.4)" />
-            <!-- 左翼 -->
-            <path d="M30 90 L10 115 L30 110Z" fill="#009688" opacity="0.8" />
-            <!-- 右翼 -->
-            <path d="M90 90 L110 115 L90 110Z" fill="#009688" opacity="0.8" />
-            <!-- 火箭底部 -->
-            <rect x="40" y="110" width="40" height="10" rx="2" fill="#2a3149" />
-            <!-- 火焰 -->
-            <g class="flame">
-              <path d="M45 120 L60 155 L75 120Z" fill="url(#flameGrad1)" opacity="0.9" />
-              <path d="M50 120 L60 145 L70 120Z" fill="url(#flameGrad2)" opacity="0.95" />
-              <path d="M55 120 L60 135 L65 120Z" fill="#ffe082" />
-            </g>
-            <defs>
-              <linearGradient id="rocketGrad" x1="30" y1="10" x2="90" y2="110">
-                <stop offset="0%" stop-color="#3a4565" />
-                <stop offset="100%" stop-color="#252b3d" />
-              </linearGradient>
-              <radialGradient id="windowGrad" cx="0.4" cy="0.35">
-                <stop offset="0%" stop-color="#4dd0e1" />
-                <stop offset="100%" stop-color="#00838f" />
-              </radialGradient>
-              <linearGradient id="flameGrad1" x1="60" y1="120" x2="60" y2="155">
-                <stop offset="0%" stop-color="#ff6d00" />
-                <stop offset="100%" stop-color="rgba(255,109,0,0)" />
-              </linearGradient>
-              <linearGradient id="flameGrad2" x1="60" y1="120" x2="60" y2="145">
-                <stop offset="0%" stop-color="#ffab00" />
-                <stop offset="100%" stop-color="rgba(255,171,0,0)" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <!-- 火箭尾焰粒子 -->
-        <div class="exhaust-particles">
-          <span v-for="p in 8" :key="p" class="particle" :style="particleStyle()"></span>
-        </div>
-      </div>
-
-      <!-- 环绕行星 -->
-      <div class="planet planet-1">
-        <svg width="40" height="40" viewBox="0 0 40 40">
-          <circle cx="20" cy="20" r="16" fill="#2a3149" stroke="#009688" stroke-width="1" opacity="0.6" />
-          <ellipse cx="20" cy="20" rx="20" ry="6" fill="none" stroke="rgba(0,150,136,0.3)" stroke-width="1.5" />
-        </svg>
-      </div>
-      <div class="planet planet-2">
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" fill="#1a1f2e" stroke="#4dd0e1" stroke-width="1" opacity="0.5" />
-        </svg>
-      </div>
-
-      <!-- 文字区域 -->
-      <div class="text-area">
-        <h1 class="title">
-          <span class="title-icon">🚀</span>
-          {{ t("dashboard.feature_in_development") }}
-        </h1>
-        <p class="subtitle">{{ t("dashboard.dashboard_coming_soon") }}</p>
-        <div class="progress-hint">
-          <div class="progress-bar">
-            <div class="progress-fill"></div>
-          </div>
-          <span class="progress-text">Coming Soon...</span>
-        </div>
+      <div class="header-actions">
+        <el-button :icon="Refresh" :loading="loading" @click="loadDashboard">Refresh</el-button>
       </div>
     </div>
+
+    <el-row :gutter="16" class="metric-row" :class="{ 'metric-row--customer': showMobileOrderCard }">
+      <el-col
+        v-for="item in metrics"
+        :key="item.label"
+        class="metric-col"
+        :class="{ 'metric-col--customer': showMobileOrderCard }"
+        :xs="24"
+        :sm="12"
+        :lg="metricColSpan"
+      >
+        <div class="metric-card" :class="{ 'metric-card--qr': item.kind === 'qr' }">
+          <div v-if="item.kind !== 'qr'" class="metric-icon" :class="item.type">
+            <el-icon><component :is="item.icon" /></el-icon>
+          </div>
+          <div v-if="item.kind !== 'qr'" class="metric-content">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+            <small>{{ item.hint }}</small>
+          </div>
+          <div v-else class="metric-qr">
+            <template v-if="mobileOrderLink">
+              <img :src="qrCodeUrl(mobileOrderLink)" alt="Mobile order QR code" />
+            </template>
+            <template v-else>
+              <div class="metric-qr__placeholder">
+                <span v-if="mobileOrderLoading" class="metric-qr__loading"></span>
+                <span v-else class="metric-qr__placeholder-text">QR</span>
+              </div>
+            </template>
+            <p class="metric-qr__text">
+              {{
+                mobileOrderLink
+                  ? "Scan to place orders on mobile"
+                  : mobileOrderLoading
+                    ? "Generating mobile order QR..."
+                    : "No mobile order link is available for this account"
+              }}
+            </p>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <el-row v-if="!isCustomerAccount" :gutter="16" class="content-row">
+      <el-col :xs="24" :lg="isCustomerAccount ? 24 : 15">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Shipment Overview</h3>
+              <p>Current order status distribution</p>
+            </div>
+            <el-button link type="primary" @click="goTo('/my-orders/index')">View Orders</el-button>
+          </div>
+          <div class="status-grid">
+            <div v-for="item in orderStatuses" :key="item.name" class="status-item">
+              <div class="status-top">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+              <el-progress :percentage="item.percent" :show-text="false" :stroke-width="8" :color="item.color" />
+            </div>
+          </div>
+        </section>
+      </el-col>
+
+      <el-col v-if="isSuperAdminAccount" :xs="24" :lg="9">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Sales Pipeline</h3>
+              <p>Lead status summary</p>
+            </div>
+            <el-button link type="primary" @click="goTo('/sales-leads/index')">View Leads</el-button>
+          </div>
+          <div class="lead-summary">
+            <div v-for="item in leadStatuses" :key="item.name" class="lead-status">
+              <span class="lead-dot" :style="{ backgroundColor: item.color }"></span>
+              <span>{{ item.name }}</span>
+              <strong>{{ item.count }}</strong>
+            </div>
+          </div>
+        </section>
+      </el-col>
+
+      <el-col v-else-if="isCompanyAccount" :xs="24" :lg="9">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Company Scope</h3>
+              <p>Your customer and shipment overview</p>
+            </div>
+            <el-button link type="primary" @click="goTo('/customer/index')">View Customers</el-button>
+          </div>
+          <div class="scope-list">
+            <div class="scope-item">
+              <span>Customers</span>
+              <strong>{{ formatNumber(customerTotal) }}</strong>
+            </div>
+            <div class="scope-item">
+              <span>Orders</span>
+              <strong>{{ formatNumber(orderTotal) }}</strong>
+            </div>
+          </div>
+        </section>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="16" class="content-row">
+      <el-col :xs="24" :lg="15">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Recent Orders</h3>
+              <p>{{ recentOrdersSubtitle }}</p>
+            </div>
+          </div>
+          <el-table :data="recentOrders" height="310" stripe>
+            <el-table-column prop="shipmentNumber" label="Tracking No." min-width="150" show-overflow-tooltip />
+            <el-table-column prop="receiverName" label="Receiver" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="receiverCountry" label="Country" width="90" />
+            <el-table-column prop="shipmentStatus" label="Status" width="110">
+              <template #default="{ row }">
+                <el-tag effect="plain">{{ row.shipmentStatus || "Created" }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="Date" width="130">
+              <template #default="{ row }">{{ formatDate(row.shipmentDate) }}</template>
+            </el-table-column>
+          </el-table>
+        </section>
+      </el-col>
+
+      <el-col :xs="24" :lg="9">
+        <div class="side-stack">
+          <section class="panel quick-panel">
+            <div class="panel-header">
+              <div>
+                <h3>Quick Actions</h3>
+                <p>Common daily operations</p>
+              </div>
+            </div>
+            <div class="quick-actions">
+              <button v-for="item in visibleQuickActions" :key="item.path" class="quick-action" @click="goTo(item.path)">
+                <el-icon><component :is="item.icon" /></el-icon>
+                <span>{{ item.label }}</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
-<script setup lang="ts">
-import { useI18n } from "vue-i18n";
+<script setup lang="ts" name="Dashboard">
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { ChatLineRound, Document, OfficeBuilding, Plus, Refresh, TrendCharts, User, Van } from "@element-plus/icons-vue";
+import dayjs from "dayjs";
+import { getOrderList } from "@/api/modules/orderList";
+import { getCurrentUserInfoApi } from "@/api/modules/login";
+import { getCustomerList, getCustomerMobileOrderLink } from "@/api/modules/customer";
+import { getSalesLeadList } from "@/api/modules/salesLead";
+import { useUserStore } from "@/stores/modules/user";
+import { getCompanyList } from "@/api/modules/company";
+import { localSet } from "@/utils";
 
-const { t } = useI18n();
+interface DashboardMetricItem {
+  label: string;
+  hint: string;
+  icon: any;
+  type: string;
+  value?: string;
+  kind?: "qr";
+}
 
-const starStyle = () => {
-  const x = Math.random() * 100;
-  const y = Math.random() * 100;
-  const size = Math.random() * 2 + 1;
-  const delay = Math.random() * 3;
-  const duration = Math.random() * 2 + 2;
-  return {
-    left: `${x}%`,
-    top: `${y}%`,
-    width: `${size}px`,
-    height: `${size}px`,
-    animationDelay: `${delay}s`,
-    animationDuration: `${duration}s`
-  };
+const router = useRouter();
+const userStore = useUserStore();
+const loading = ref(false);
+const orderTotal = ref(0);
+const companyTotal = ref(0);
+const customerTotal = ref(0);
+const leadTotal = ref(0);
+const recentOrders = ref<any[]>([]);
+const leadRows = ref<any[]>([]);
+const orderStatusMap = ref<Record<string, number>>({});
+const mobileOrderLoading = ref(false);
+const mobileOrderLink = ref("");
+
+const todayLabel = computed(() => dayjs().format("YYYY-MM-DD dddd"));
+const currentUser = computed(() => userStore.getUserInfo as any);
+const currentUserLevel = computed(() => String(currentUser.value?.userLevel || "").toUpperCase());
+const currentUsername = computed(() => String(currentUser.value?.username || "").toLowerCase());
+const currentCustomerId = computed(() =>
+  Number(
+    currentUser.value?.customerId ||
+      currentUser.value?.CustomerId ||
+      currentUser.value?.customer?.id ||
+      currentUser.value?.Customer?.Id ||
+      currentUser.value?.customer?.customerId ||
+      currentUser.value?.Customer?.CustomerId ||
+      0
+  )
+);
+const showMobileOrderCard = computed(() => isCustomerAccount.value || currentUsername.value === "test");
+const isCustomerAccount = computed(() => currentUserLevel.value === "C" || !!currentUser.value?.customer);
+const isSuperAdminAccount = computed(() => {
+  const companyId = Number(currentUser.value?.companyId || 0);
+  return (
+    currentUsername.value === "yuan" ||
+    ["S", "SA", "SUPER", "SUPERADMIN"].includes(currentUserLevel.value) ||
+    (currentUserLevel.value === "A" && !isCustomerAccount.value && companyId <= 0)
+  );
+});
+const isCompanyAccount = computed(() => !!currentUser.value?.companyId && !isCustomerAccount.value && !isSuperAdminAccount.value);
+const metricColSpan = computed(() => (showMobileOrderCard.value ? 5 : 6));
+const dashboardSubtitle = computed(() => {
+  const accountLabel = isSuperAdminAccount.value
+    ? "Super administrator dashboard"
+    : isCustomerAccount.value
+      ? "Customer dashboard"
+      : "Company dashboard";
+  return `${accountLabel} · ${todayLabel.value}`;
+});
+const recentOrdersSubtitle = computed(() => {
+  if (isSuperAdminAccount.value) return "Latest shipments across the platform";
+  if (isCompanyAccount.value) return "Latest shipments from the order list";
+  return "Latest shipments from your account";
+});
+
+const statusConfig = [
+  { name: "Created", label: "Created", color: "#409eff" },
+  { name: "Printed", label: "Printed", color: "#626aef" },
+  { name: "InTransit", label: "In Transit", color: "#e6a23c" },
+  { name: "Delivered", label: "Delivered", color: "#67c23a" },
+  { name: "Exception", label: "Exception", color: "#f56c6c" },
+  { name: "Return", label: "Return", color: "#909399" },
+  { name: "Cancel", label: "Cancelled", color: "#b1b3b8" }
+];
+
+const leadStatusConfig = [
+  { name: "New", color: "#409eff" },
+  { name: "Contacted", color: "#626aef" },
+  { name: "Qualified", color: "#67c23a" },
+  { name: "Proposal", color: "#e6a23c" },
+  { name: "Won", color: "#13ce66" },
+  { name: "Lost", color: "#909399" }
+];
+
+const metrics = computed<DashboardMetricItem[]>(() => {
+  const baseMetrics: DashboardMetricItem[] = isSuperAdminAccount.value
+    ? [
+        {
+          label: "Total Orders",
+          value: formatNumber(orderTotal.value),
+          hint: "Platform shipments",
+          icon: Van,
+          type: "orders"
+        },
+        {
+          label: "Companies",
+          value: formatNumber(companyTotal.value),
+          hint: "Managed companies",
+          icon: OfficeBuilding,
+          type: "companies"
+        },
+        {
+          label: "Customers",
+          value: formatNumber(customerTotal.value),
+          hint: "Customer accounts",
+          icon: User,
+          type: "customers"
+        },
+        {
+          label: "Sales Leads",
+          value: formatNumber(leadTotal.value),
+          hint: "Potential customers",
+          icon: TrendCharts,
+          type: "leads"
+        }
+      ]
+    : isCompanyAccount.value
+      ? [
+          {
+            label: "Total Orders",
+            value: formatNumber(orderTotal.value),
+            hint: "All matched shipments",
+            icon: Van,
+            type: "orders"
+          },
+          {
+            label: "Customers",
+            value: formatNumber(customerTotal.value),
+            hint: "Active customer accounts",
+            icon: User,
+            type: "customers"
+          },
+          {
+            label: "In Transit",
+            value: formatNumber(orderStatusMap.value.InTransit || 0),
+            hint: "Currently moving",
+            icon: Document,
+            type: "transit"
+          },
+          {
+            label: "Exceptions",
+            value: formatNumber(orderStatusMap.value.Exception || 0),
+            hint: "Needs attention",
+            icon: ChatLineRound,
+            type: "exceptions"
+          }
+        ]
+      : [
+          {
+            label: "My Orders",
+            value: formatNumber(orderTotal.value),
+            hint: "Your matched shipments",
+            icon: Van,
+            type: "orders"
+          },
+          {
+            label: "In Transit",
+            value: formatNumber(orderStatusMap.value.InTransit || 0),
+            hint: "Currently moving",
+            icon: Document,
+            type: "transit"
+          },
+          {
+            label: "Delivered",
+            value: formatNumber(orderStatusMap.value.Delivered || 0),
+            hint: "Completed shipments",
+            icon: Document,
+            type: "delivered"
+          },
+          {
+            label: "Exceptions",
+            value: formatNumber(orderStatusMap.value.Exception || 0),
+            hint: "Needs attention",
+            icon: ChatLineRound,
+            type: "exceptions"
+          }
+        ];
+
+  if (!showMobileOrderCard.value) {
+    return baseMetrics;
+  }
+
+  return [
+    ...baseMetrics,
+    {
+      label: "Mobile QR",
+      hint: "Scan to create orders on mobile",
+      icon: Plus,
+      type: "orders",
+      kind: "qr"
+    }
+  ];
+});
+
+const orderStatuses = computed(() => {
+  const total = statusConfig.reduce((sum, item) => sum + (orderStatusMap.value[item.name] || 0), 0) || 1;
+  return statusConfig.map(item => {
+    const count = orderStatusMap.value[item.name] || 0;
+    return {
+      ...item,
+      count: formatNumber(count),
+      percent: Math.round((count / total) * 100)
+    };
+  });
+});
+
+const leadStatuses = computed(() => {
+  const counts = leadRows.value.reduce(
+    (acc, row) => {
+      const status = row.status || row.Status || "New";
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+  return leadStatusConfig.map(item => ({
+    ...item,
+    count: counts[item.name] || 0
+  }));
+});
+
+const quickActions = [
+  { label: "Create Order", path: "/create-order", icon: Plus, account: "customer" },
+  { label: "Order List", path: "/my-orders", icon: Document, account: "all" },
+  { label: "Address Book", path: "/address-book", icon: User, account: "customer" },
+  { label: "Company List", path: "/company", icon: OfficeBuilding, account: "super" },
+  { label: "Customer List", path: "/customer", icon: User, account: "company" },
+  { label: "Sales Leads", path: "/sales-leads", icon: TrendCharts, account: "super" }
+];
+
+const visibleQuickActions = computed(() =>
+  quickActions.filter(
+    item =>
+      item.account === "all" ||
+      (item.account === "customer" && isCustomerAccount.value) ||
+      (item.account === "super" && isSuperAdminAccount.value) ||
+      (item.account === "company" && (isCompanyAccount.value || isSuperAdminAccount.value))
+  )
+);
+
+const unwrapData = (res: any) => res?.Data ?? res?.data ?? res;
+const unwrapList = (data: any) => {
+  if (Array.isArray(data)) return data;
+  return data?.items ?? data?.Items ?? data?.data ?? data?.Data ?? [];
+};
+const unwrapTotal = (data: any) =>
+  data?.recordsFiltered ?? data?.totalCount ?? data?.TotalCount ?? data?.total ?? unwrapList(data).length;
+
+const formatNumber = (value: number) => Number(value || 0).toLocaleString();
+const formatDate = (value?: string) => (value ? dayjs(value).format("YYYY-MM-DD") : "-");
+const qrCodeUrl = (url: string) => `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+
+const getDateRange = () => ({
+  startDate: dayjs().subtract(90, "day").startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+  endDate: dayjs().endOf("day").format("YYYY-MM-DDTHH:mm:ss")
+});
+
+const parseOrderSummary = (summary?: string) => {
+  if (!summary) return {};
+  try {
+    const rows = JSON.parse(summary);
+    return rows.reduce(
+      (acc, item) => {
+        acc[item.Name] = Number(item.Count || 0);
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  } catch {
+    return {};
+  }
 };
 
-const particleStyle = () => {
-  const x = (Math.random() - 0.5) * 40;
-  const delay = Math.random() * 1.5;
-  const duration = Math.random() * 0.8 + 0.5;
-  const size = Math.random() * 4 + 2;
-  return {
-    "--px": `${x}px`,
-    animationDelay: `${delay}s`,
-    animationDuration: `${duration}s`,
-    width: `${size}px`,
-    height: `${size}px`
-  };
+const loadOrders = async () => {
+  const range = getDateRange();
+  const res: any = await getOrderList({
+    Start: 0,
+    Length: 8,
+    startDate: range.startDate,
+    endDate: range.endDate,
+    childCustomerId: [],
+    serviceCode: [],
+    country: [],
+    shipmentNumber: "",
+    hawbNumberType: "shipmentNumber",
+    shipmentStatus: null
+  });
+  const responseData = unwrapData(res);
+  const pageData = responseData?.data ?? responseData?.Data ?? responseData;
+  recentOrders.value = unwrapList(pageData).slice(0, 8);
+  orderTotal.value = unwrapTotal(pageData);
+  orderStatusMap.value = parseOrderSummary(pageData?.sumData);
 };
+
+const loadCustomers = async () => {
+  const res: any = await getCustomerList({ pageNumber: 1, pageSize: 1 });
+  const data = unwrapData(res);
+  customerTotal.value = unwrapTotal(data);
+};
+
+const loadCompanies = async () => {
+  const res: any = await getCompanyList();
+  const data = unwrapData(res);
+  companyTotal.value = unwrapTotal(data);
+};
+
+const loadLeads = async () => {
+  const res: any = await getSalesLeadList({ pageNumber: 1, pageSize: 30 });
+  const data = unwrapData(res);
+  leadRows.value = unwrapList(data);
+  leadTotal.value = unwrapTotal(data);
+};
+
+const resolveMobileOrderCustomerId = async () => {
+  if (currentCustomerId.value) return currentCustomerId.value;
+  if (currentUsername.value !== "test") return 0;
+  const res: any = await getCustomerList({ pageNumber: 1, pageSize: 1 });
+  const data = unwrapData(res);
+  const firstCustomer = unwrapList(data)[0];
+  return Number(firstCustomer?.id || firstCustomer?.Id || 0);
+};
+
+const loadMobileOrderLink = async () => {
+  const customerId = await resolveMobileOrderCustomerId();
+  if (!customerId) return;
+  mobileOrderLoading.value = true;
+  mobileOrderLink.value = "";
+  try {
+    const res: any = await getCustomerMobileOrderLink(customerId);
+    const data = unwrapData(res);
+    mobileOrderLink.value = data.url || data.Url || "";
+  } catch (error: any) {
+    ElMessage.error(error?.Data || error?.Message || error?.message || "Failed to generate mobile order link");
+  } finally {
+    mobileOrderLoading.value = false;
+  }
+};
+
+const loadDashboard = async () => {
+  loading.value = true;
+  try {
+    await refreshCurrentUser();
+    const tasks = [loadOrders()];
+    if (showMobileOrderCard.value) {
+      tasks.push(loadMobileOrderLink());
+    }
+    if (isCompanyAccount.value) {
+      tasks.push(loadCustomers());
+    }
+    if (isSuperAdminAccount.value) {
+      tasks.push(loadCompanies(), loadCustomers(), loadLeads());
+    }
+    await Promise.allSettled(tasks);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const refreshCurrentUser = async () => {
+  const userInfoData: any = await getCurrentUserInfoApi();
+  if (userInfoData?.Data) {
+    localSet("userInfo", userInfoData.Data);
+    userStore.setUserInfo();
+  }
+};
+
+const goTo = (path: string) => {
+  router.push(path);
+};
+
+onMounted(() => {
+  loadDashboard();
+});
 </script>
 
 <style lang="scss" scoped>
-.dashboard-placeholder {
+.dashboard-page {
+  min-height: 100%;
+  padding: 16px;
+  background: #f5f7fa;
+}
+.dashboard-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-height: 600px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 50%, #1a1f2e 100%);
-}
-.scene {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 600px;
-  padding: 40px 20px;
-}
-
-/* 星空 */
-.stars {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.star {
-  position: absolute;
-  background: #ffffff;
-  border-radius: 50%;
-  opacity: 0.3;
-  animation: twinkle ease-in-out infinite alternate;
-}
-
-@keyframes twinkle {
-  0% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0.8;
-    transform: scale(1.3);
-  }
-}
-
-/* 火箭容器 */
-.rocket-container {
-  position: relative;
-  margin-bottom: 40px;
-  animation: rocket-float 3s ease-in-out infinite;
-}
-
-@keyframes rocket-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-}
-.rocket {
-  position: relative;
-  z-index: 2;
-  filter: drop-shadow(0 0 20px rgb(0 150 136 / 30%));
-}
-.flame {
-  transform-origin: top center;
-  animation: flame-flicker 0.15s ease-in-out infinite alternate;
-}
-
-@keyframes flame-flicker {
-  0% {
-    transform: scaleX(1) scaleY(1);
-  }
-  100% {
-    transform: scaleX(0.9) scaleY(1.05);
-  }
-}
-
-/* 尾焰粒子 */
-.exhaust-particles {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  z-index: 1;
-  transform: translateX(-50%);
-}
-.particle {
-  position: absolute;
-  background: radial-gradient(circle, #ffab00, rgb(255 109 0 / 0%));
-  border-radius: 50%;
-  opacity: 0;
-  animation: particle-fall linear infinite;
-}
-
-@keyframes particle-fall {
-  0% {
-    opacity: 0.8;
-    transform: translate(var(--px), 0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--px), 60px) scale(0);
-  }
-}
-
-/* 行星装饰 */
-.planet {
-  position: absolute;
-  z-index: 0;
-  opacity: 0.6;
-}
-.planet-1 {
-  top: 8%;
-  right: 5%;
-  animation: planet-float 6s ease-in-out infinite;
-}
-.planet-2 {
-  bottom: 25%;
-  left: 8%;
-  animation: planet-float 8s ease-in-out infinite 2s;
-}
-
-@keyframes planet-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(5deg);
-  }
-}
-
-/* 文字区域 */
-.text-area {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.title {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
-  font-size: 32px;
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2d3d;
+  }
+  p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #7a8599;
+  }
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.metric-row,
+.content-row {
+  margin-bottom: 16px;
+}
+.metric-row--customer {
+  justify-content: space-between;
+}
+.metric-col--customer {
+  @media (width >= 1200px) {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+.side-stack {
+  display: grid;
+  gap: 16px;
+}
+.metric-card,
+.panel {
+  background: #ffffff;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgb(31 45 61 / 4%);
+}
+.metric-card {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 112px;
+  padding: 20px;
+}
+.metric-card--qr {
+  justify-content: center;
+  padding: 10px 12px;
+}
+.metric-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-right: 16px;
+  font-size: 24px;
+  border-radius: 6px;
+  &.orders {
+    color: #1d4ed8;
+    background: #eff6ff;
+  }
+  &.companies {
+    color: #6d28d9;
+    background: #f5f3ff;
+  }
+  &.transit {
+    color: #b45309;
+    background: #fffbeb;
+  }
+  &.delivered {
+    color: #047857;
+    background: #ecfdf5;
+  }
+  &.customers {
+    color: #047857;
+    background: #ecfdf5;
+  }
+  &.leads {
+    color: #b45309;
+    background: #fffbeb;
+  }
+  &.exceptions {
+    color: #b91c1c;
+    background: #fef2f2;
+  }
+}
+.metric-qr {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  width: 100%;
+  text-align: center;
+  img {
+    width: 68px;
+    height: 68px;
+    padding: 2px;
+    background: #ffffff;
+    border: 1px solid #e2eaee;
+    border-radius: 6px;
+  }
+}
+.metric-qr__text {
+  max-width: 116px;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.2;
+  color: #61707d;
+}
+.metric-qr__placeholder {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  color: #009094;
+  background: linear-gradient(180deg, #f2fbfb 0%, #ffffff 100%);
+  border: 1px dashed #b9dedd;
+  border-radius: 6px;
+  .el-icon {
+    font-size: 18px;
+  }
+}
+.metric-qr__placeholder-text {
+  font-size: 18px;
   font-weight: 700;
-  color: #e5eaf3;
-  letter-spacing: 2px;
-  .title-icon {
-    font-size: 36px;
-    animation: icon-bounce 2s ease-in-out infinite;
+  letter-spacing: 0;
+}
+.metric-qr__loading {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #c7d6db;
+  border-top-color: #009094;
+  border-radius: 50%;
+  animation: dashboard-qr-spin 0.8s linear infinite;
+}
+.metric-content {
+  display: flex;
+  flex-direction: column;
+  span,
+  small {
+    font-size: 12px;
+    color: #7a8599;
+  }
+  strong {
+    margin: 6px 0 4px;
+    font-size: 26px;
+    line-height: 1;
+    color: #1f2d3d;
   }
 }
-
-@keyframes icon-bounce {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
+.panel {
+  height: 100%;
+  padding: 16px;
+}
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 48px;
+  margin-bottom: 14px;
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2d3d;
   }
-  25% {
-    transform: translateY(-4px) rotate(-5deg);
-  }
-  75% {
-    transform: translateY(-4px) rotate(5deg);
+  p {
+    margin: 5px 0 0;
+    font-size: 12px;
+    color: #8a94a6;
   }
 }
-.subtitle {
-  max-width: 400px;
-  margin-bottom: 32px;
-  font-size: 15px;
-  line-height: 1.8;
-  color: #8b8fa3;
-  letter-spacing: 1px;
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
 }
-
-/* 进度提示 */
-.progress-hint {
+.status-item {
+  padding: 12px;
+  background: #fafbfc;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+}
+.status-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #5b667a;
+  strong {
+    color: #1f2d3d;
+  }
+}
+.lead-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lead-status {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #4b5565;
+  background: #fafbfc;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  strong {
+    color: #1f2d3d;
+  }
+}
+.lead-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.scope-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.scope-item {
+  display: flex;
   align-items: center;
-}
-.progress-bar {
-  width: 240px;
-  height: 6px;
-  overflow: hidden;
-  background: rgb(255 255 255 / 8%);
-  border-radius: 3px;
-}
-.progress-fill {
-  width: 30%;
-  height: 100%;
-  background: linear-gradient(90deg, #009688, #4dd0e1);
-  border-radius: 3px;
-  animation: progress-pulse 2s ease-in-out infinite;
-}
-
-@keyframes progress-pulse {
-  0% {
-    width: 20%;
-    opacity: 0.6;
-  }
-  50% {
-    width: 40%;
-    opacity: 1;
-  }
-  100% {
-    width: 20%;
-    opacity: 0.6;
-  }
-}
-.progress-text {
+  justify-content: space-between;
+  padding: 14px 12px;
   font-size: 13px;
-  font-weight: 500;
-  color: #009688;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  animation: text-fade 2s ease-in-out infinite;
+  color: #4b5565;
+  background: #fafbfc;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  strong {
+    font-size: 18px;
+    color: #1f2d3d;
+  }
+}
+.quick-panel {
+  min-height: 240px;
+}
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 112px;
+  color: #344054;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  .el-icon {
+    font-size: 26px;
+    color: #409eff;
+  }
+  &:hover {
+    color: #409eff;
+    border-color: #a0cfff;
+  }
 }
 
-@keyframes text-fade {
-  0%,
-  100% {
-    opacity: 0.5;
+@media (width <= 768px) {
+  .dashboard-header,
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
-  50% {
-    opacity: 1;
+  .header-actions {
+    margin-top: 12px;
+  }
+  .status-grid,
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes dashboard-qr-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

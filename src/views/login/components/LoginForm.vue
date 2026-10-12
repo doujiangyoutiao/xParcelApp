@@ -47,6 +47,7 @@ import { initDynamicRouter } from "@/routers/modules/dynamicRouter";
 import { CircleClose, UserFilled } from "@element-plus/icons-vue";
 import type { ElForm } from "element-plus";
 import { localSet } from "@/utils";
+import { resolveMenuIcon } from "@/utils/menuIcon";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -70,10 +71,10 @@ const loginForm = reactive<Login.ReqLoginForm>({
 const handleFormatForMenuList = (menuTree: any[]): void => {
   menuTree.forEach(item => {
     console.log(item);
-    const { name, icon, title, activeMenu, ishide, isfull, isAffix, isKeepAlive } = item;
+    const { name, title, activeMenu, ishide, isfull, isAffix, isKeepAlive } = item;
     item.meta = {
       name,
-      icon,
+      icon: resolveMenuIcon(item),
       title,
       activeMenu,
       isHide: ishide,

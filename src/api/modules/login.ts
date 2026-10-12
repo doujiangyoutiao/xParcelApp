@@ -37,6 +37,10 @@ export const getAuthButtonListApi = () => {
   return authButtonList;
 };
 
+export const changePasswordApi = (params: { oldPassword: string; newPassword: string }) => {
+  return http.post(PORT1 + `/Auth/change-password`, params);
+};
+
 // 用户退出登录
 export const logoutApi = () => {
   return http.post(PORT1 + `/logout`);

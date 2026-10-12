@@ -146,7 +146,7 @@ const props = withDefaults(defineProps<ProTableProps>(), {
 });
 
 // table 实例
-const tableRef = ref<InstanceType<typeof ElTable>>();
+const tableRef = ref<any>();
 
 // 生成组件唯一id
 const uuid = ref("id-" + generateUUID());

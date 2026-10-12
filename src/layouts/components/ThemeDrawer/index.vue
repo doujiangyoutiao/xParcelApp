@@ -120,10 +120,6 @@
       <span>标签栏图标</span>
       <el-switch v-model="tabsIcon" />
     </div>
-    <div class="theme-item">
-      <span>页脚</span>
-      <el-switch v-model="footer" />
-    </div>
   </el-drawer>
 </template>
 
@@ -153,8 +149,7 @@ const {
   breadcrumb,
   breadcrumbIcon,
   tabs,
-  tabsIcon,
-  footer
+  tabsIcon
 } = storeToRefs(globalStore);
 
 // 预定义主题颜色

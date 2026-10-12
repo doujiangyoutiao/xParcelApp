@@ -5,6 +5,15 @@
       <span class="coloader-title">{{ t("service.connected_providers") }}</span>
       <div class="coloader-items">
         <div v-for="item in coloaderList" :key="item.coloaderId" class="coloader-item" @click="handleAddService(item)">
+          <span class="provider-logo-wrap">
+            <img
+              v-if="getProviderLogoUrl(item.companyLogo)"
+              class="provider-logo"
+              :src="getProviderLogoUrl(item.companyLogo)"
+              :alt="item.coloaderCode"
+            />
+            <span v-else class="provider-logo-fallback">{{ getProviderInitial(item.coloaderCode) }}</span>
+          </span>
           <span class="coloader-name">{{ item.coloaderCode }}</span>
           <el-icon class="coloader-add-icon"><Plus /></el-icon>
         </div>
@@ -16,7 +25,22 @@
       <span class="table-title">{{ t("service.service_list") }}</span>
     </div>
     <el-table :data="serviceList" stripe height="calc(100vh - 300px)">
-      <el-table-column prop="coloaderCode" :label="t('service.provider')" min-width="150" />
+      <el-table-column prop="coloaderCode" :label="t('service.provider')" min-width="180">
+        <template #default="scope">
+          <div class="provider-cell">
+            <span class="provider-logo-wrap table-logo">
+              <img
+                v-if="getProviderLogoUrl(scope.row.companyLogo)"
+                class="provider-logo"
+                :src="getProviderLogoUrl(scope.row.companyLogo)"
+                :alt="scope.row.coloaderCode"
+              />
+              <span v-else class="provider-logo-fallback">{{ getProviderInitial(scope.row.coloaderCode) }}</span>
+            </span>
+            <span>{{ scope.row.coloaderCode }}</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column prop="serviceCode" :label="t('service.service_code')" min-width="150" />
       <el-table-column prop="remark" :label="t('service.remark')" min-width="150" />
       <el-table-column prop="creationTime" :label="t('service.creation_time')" width="180">
@@ -80,6 +104,7 @@ import {
 } from "@/api/modules/service";
 import { useI18n } from "vue-i18n";
 import moment from "moment";
+import { getProviderInitial, getProviderLogoUrl } from "@/utils/providerLogo";
 
 const { t } = useI18n();
 
@@ -258,9 +283,10 @@ onMounted(() => {
       align-items: center;
       .coloader-item {
         display: inline-flex;
-        gap: 4px;
+        gap: 7px;
         align-items: center;
-        padding: 4px 10px;
+        min-height: 30px;
+        padding: 4px 10px 4px 5px;
         cursor: pointer;
         background: #ffffff;
         border: 1px solid var(--el-border-color);
@@ -303,6 +329,43 @@ onMounted(() => {
   }
   :deep(.el-dialog__body) {
     padding-top: 10px;
+  }
+  .provider-cell {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+  .provider-logo-wrap {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 22px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 4px;
+  }
+  .provider-logo-wrap.table-logo {
+    width: 38px;
+    height: 24px;
+  }
+  .provider-logo {
+    max-width: 28px;
+    max-height: 16px;
+    object-fit: contain;
+  }
+  .table-logo .provider-logo {
+    max-width: 32px;
+    max-height: 18px;
+  }
+  .provider-logo-fallback {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--el-text-color-secondary);
   }
 }
 </style>

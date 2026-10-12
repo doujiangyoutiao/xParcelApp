@@ -28,10 +28,15 @@
       <el-table-column prop="phone" :label="t('customer.phone')" width="120" />
       <el-table-column prop="email" :label="t('customer.email')" min-width="160" show-overflow-tooltip />
       <el-table-column prop="companyName" :label="t('customer.company')" min-width="120" />
-      <el-table-column prop="countryName" :label="t('customer.country')" width="100" />
+      <el-table-column :label="t('customer.country')" width="100">
+        <template #default="{ row }">
+          {{ formatCountryDisplayName(row.countryName) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="status" :label="t('customer.status')" width="80" />
-      <el-table-column :label="t('customer.operation')" align="center" fixed="right" width="150">
+      <el-table-column :label="t('customer.operation')" align="center" fixed="right" width="190">
         <template #default="scope">
+          <el-button type="primary" link :icon="Link" @click="openMobileOrderLink(scope.row)" />
           <el-button type="primary" link :icon="EditPen" @click="openDialog(dialogTitles.EDIT, scope.row)" />
           <el-button type="primary" link :icon="Delete" @click="handleDelete(scope.row)" />
         </template>
@@ -157,24 +162,38 @@
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">{{ t("customer.confirm") }}</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="mobileOrderDialogVisible" title="Mobile Order QR" width="520px" destroy-on-close align-center>
+      <div class="mobile-order-link-dialog" v-if="mobileOrderLink.url">
+        <img class="mobile-order-qr" :src="qrCodeUrl(mobileOrderLink.url)" alt="Mobile order QR code" />
+        <el-input v-model="mobileOrderLink.url" readonly>
+          <template #append>
+            <el-button @click="copyMobileOrderLink">Copy</el-button>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="openMobileOrderPage">Open Page</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts" name="CustomerList">
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Plus, Delete, EditPen } from "@element-plus/icons-vue";
+import { Plus, Delete, EditPen, Link } from "@element-plus/icons-vue";
 import {
   getCustomerList,
   getCustomerById,
   getCustomerCreateOptions,
   addCustomer,
   updateCustomer,
-  deleteCustomer
+  deleteCustomer,
+  getCustomerMobileOrderLink
 } from "@/api/modules/customer";
 import { getCompanyList, getCountries } from "@/api/modules/company";
 import { useUserStore } from "@/stores/modules/user";
 import { useI18n } from "vue-i18n";
+import { formatCountryDisplayName } from "@/utils";
 
 const { t } = useI18n();
 
@@ -209,6 +228,11 @@ const dialogTitle = ref("");
 const isEdit = ref(false);
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
+const mobileOrderDialogVisible = ref(false);
+const mobileOrderLink = reactive({
+  url: "",
+  token: ""
+});
 
 const dialogTitles = {
   ADD: t("customer.add_customer"),
@@ -453,6 +477,32 @@ const handleDelete = async (row: any) => {
   }
 };
 
+const qrCodeUrl = (url: string) => `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+
+const openMobileOrderLink = async (row: any) => {
+  try {
+    const res: any = await getCustomerMobileOrderLink(row.id);
+    const data = res?.Data || res?.data || res;
+    mobileOrderLink.url = data.url || data.Url || "";
+    mobileOrderLink.token = data.token || data.Token || "";
+    mobileOrderDialogVisible.value = true;
+  } catch (error: any) {
+    ElMessage.error(error?.Data || error?.Message || error?.message || "Failed to generate mobile order link");
+  }
+};
+
+const copyMobileOrderLink = async () => {
+  if (!mobileOrderLink.url) return;
+  await navigator.clipboard.writeText(mobileOrderLink.url);
+  ElMessage.success("Copied");
+};
+
+const openMobileOrderPage = () => {
+  if (mobileOrderLink.url) {
+    window.open(mobileOrderLink.url, "_blank");
+  }
+};
+
 onMounted(() => {
   loadDropdownData();
   loadData();
@@ -508,5 +558,16 @@ onMounted(() => {
     justify-content: flex-end;
     padding: 16px 0 0;
   }
+}
+.mobile-order-link-dialog {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+.mobile-order-qr {
+  width: 220px;
+  height: 220px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
 }
 </style>

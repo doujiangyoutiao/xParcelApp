@@ -14,24 +14,27 @@
       <!-- 姓名 -->
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6" :xxl="6">
         <el-form-item :label="$t('orderentry.consignee_name')" prop="hawbRecipient.contact">
-          <el-autocomplete
-            v-model="ruleForm.hawbRecipient.contact"
-            class="address-book-autocomplete"
-            :fetch-suggestions="queryAddressBook"
-            :placeholder="$t('orderentry.Company_enter')"
-            :debounce="350"
-            :trigger-on-focus="false"
-            clearable
-            value-key="contact"
-            @select="handleSelectAddress"
-          >
-            <template #default="{ item }">
-              <div class="address-book-suggestion">
-                <span class="address-book-contact">{{ item.contact }}</span>
-                <span class="address-book-company">{{ item.company }}</span>
-              </div>
-            </template>
-          </el-autocomplete>
+          <div class="recipient-contact-input">
+            <el-autocomplete
+              v-model="ruleForm.hawbRecipient.contact"
+              class="address-book-autocomplete"
+              :fetch-suggestions="queryAddressBook"
+              :placeholder="$t('orderentry.Company_enter')"
+              :debounce="350"
+              :trigger-on-focus="false"
+              clearable
+              value-key="contact"
+              @select="handleSelectAddress"
+            >
+              <template #default="{ item }">
+                <div class="address-book-suggestion">
+                  <span class="address-book-contact">{{ item.contact }}</span>
+                  <span class="address-book-company">{{ item.company }}</span>
+                </div>
+              </template>
+            </el-autocomplete>
+            <el-button text type="primary" class="address-book-icon-btn" :icon="Notebook" @click.stop="openAddressBookPicker" />
+          </div>
         </el-form-item>
       </el-col>
 
@@ -61,7 +64,12 @@
         <el-row>
           <el-col :xs="12" :sm="12" :md="6" :lg="6" :xl="6">
             <el-form-item :label="$t('orderentry.country')" prop="hawbRecipient.country">
-              <el-select v-model="ruleForm.hawbRecipient.country" :placeholder="$t('orderentry.please_select')" filterable>
+              <el-select
+                v-model="ruleForm.hawbRecipient.country"
+                :placeholder="$t('orderentry.please_select')"
+                filterable
+                @change="handleCountryChange"
+              >
                 <el-option v-for="item in countryList" :key="item.code" :label="item.code" :value="item.code" />
               </el-select>
             </el-form-item>
@@ -84,14 +92,8 @@
         </el-row>
       </el-col>
 
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" :xxl="8">
-        <el-form-item :label="$t('orderentry.houseNo')" prop="hawbRecipient.houseNo">
-          <el-input v-model="ruleForm.hawbRecipient.houseNo" :placeholder="$t('orderentry.please_enter')" />
-        </el-form-item>
-      </el-col>
-
       <!-- 地址 -->
-      <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16" :xxl="16">
+      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" :xxl="24">
         <el-form-item :label="$t('orderentry.street')" prop="hawbRecipient.street">
           <el-input v-model="ruleForm.hawbRecipient.street" :placeholder="$t('orderentry.please_enter')" />
         </el-form-item>
@@ -104,11 +106,43 @@
       </el-col>
     </el-row>
   </el-form>
+
+  <el-dialog v-model="addressBookDialogVisible" :title="$t('orderentry.address_book')" width="860px" destroy-on-close>
+    <div class="address-book-toolbar">
+      <el-input
+        v-model="addressBookKeyword"
+        :placeholder="$t('orderentry.address_book_search_placeholder')"
+        clearable
+        @keyup.enter="loadAddressBook"
+      />
+      <el-button type="primary" :loading="addressBookLoading" @click="loadAddressBook">
+        {{ $t("orderentry.search") }}
+      </el-button>
+    </div>
+    <el-table :data="addressBookRows" v-loading="addressBookLoading" height="420" stripe @row-dblclick="selectAddressBookRow">
+      <el-table-column prop="contact" :label="$t('orderentry.consignee_name')" min-width="140" />
+      <el-table-column prop="company" :label="$t('orderentry.contact_person')" min-width="150" />
+      <el-table-column prop="phone" :label="$t('orderentry.phone')" width="130" />
+      <el-table-column prop="country" :label="$t('orderentry.country')" width="100" />
+      <el-table-column prop="street" :label="$t('orderentry.street')" min-width="220" show-overflow-tooltip />
+      <el-table-column :label="$t('orderentry.operation')" width="110" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="selectAddressBookRow(row)">
+            {{ $t("orderentry.confirm") }}
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button @click="addressBookDialogVisible = false">{{ $t("orderentry.cancel") }}</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from "vue";
 import { FormInstance } from "element-plus";
+import { Notebook } from "@element-plus/icons-vue";
 
 import { getCountryList } from "@/api/modules/setting";
 import { getAddressBooks } from "@/api/modules/addressBook";
@@ -134,7 +168,6 @@ const ruleForm = reactive({
     city: undefined,
     postalCode: undefined,
     street: undefined,
-    houseNo: undefined,
     eORINumber: undefined,
     vATNumber: undefined
   }
@@ -146,6 +179,10 @@ const ruleFormRef = ref<FormInstance>();
 const countryList = ref<any>([]);
 const addressBookCache = new Map<string, any[]>();
 let addressBookRequestId = 0;
+const addressBookDialogVisible = ref(false);
+const addressBookLoading = ref(false);
+const addressBookKeyword = ref("");
+const addressBookRows = ref<any[]>([]);
 const handleGetCountryList = () => {
   getCountryList().then(r => {
     countryList.value = (r as any).Data;
@@ -158,7 +195,7 @@ const getAddressBookItems = (res: any) => {
   return Array.isArray(items) ? items : [];
 };
 
-const queryAddressBook = async (queryString: string, cb: (results: any[]) => void) => {
+const queryAddressBook = (queryString: string, cb: (results: any[]) => void) => {
   const keyword = queryString.trim().toLowerCase();
   if (!keyword) {
     cb([]);
@@ -172,11 +209,46 @@ const queryAddressBook = async (queryString: string, cb: (results: any[]) => voi
   }
 
   const currentRequestId = ++addressBookRequestId;
+  void (async () => {
+    try {
+      const res = await getAddressBooks(
+        {
+          pageNumber: 1,
+          pageSize: 8,
+          filterOn: "contact",
+          filterQuery: keyword
+        },
+        {
+          loading: false,
+          noShowErrorTooltips: true
+        }
+      );
+      const items = getAddressBookItems(res).map(item => ({
+        ...item,
+        value: item.contact
+      }));
+      addressBookCache.set(keyword, items);
+
+      if (currentRequestId === addressBookRequestId) {
+        cb(items);
+      }
+    } catch (error) {
+      console.error(error);
+      if (currentRequestId === addressBookRequestId) {
+        cb([]);
+      }
+    }
+  })();
+};
+
+const loadAddressBook = async () => {
+  const keyword = addressBookKeyword.value.trim().toLowerCase();
+  addressBookLoading.value = true;
   try {
     const res = await getAddressBooks(
       {
         pageNumber: 1,
-        pageSize: 8,
+        pageSize: 20,
         filterOn: "contact",
         filterQuery: keyword
       },
@@ -185,21 +257,19 @@ const queryAddressBook = async (queryString: string, cb: (results: any[]) => voi
         noShowErrorTooltips: true
       }
     );
-    const items = getAddressBookItems(res).map(item => ({
-      ...item,
-      value: item.contact
-    }));
-    addressBookCache.set(keyword, items);
-
-    if (currentRequestId === addressBookRequestId) {
-      cb(items);
-    }
+    addressBookRows.value = getAddressBookItems(res);
   } catch (error) {
     console.error(error);
-    if (currentRequestId === addressBookRequestId) {
-      cb([]);
-    }
+    addressBookRows.value = [];
+  } finally {
+    addressBookLoading.value = false;
   }
+};
+
+const openAddressBookPicker = () => {
+  addressBookDialogVisible.value = true;
+  addressBookKeyword.value = ruleForm.hawbRecipient.contact || "";
+  loadAddressBook();
 };
 
 const handleSelectAddress = (item: any) => {
@@ -208,12 +278,20 @@ const handleSelectAddress = (item: any) => {
   ruleForm.hawbRecipient.phone = item.phone || "";
   ruleForm.hawbRecipient.email = item.email || "";
   ruleForm.hawbRecipient.country = item.country || "";
-  ruleForm.hawbRecipient.Country = item.country || "";
+  delete ruleForm.hawbRecipient.Country;
   ruleForm.hawbRecipient.state = item.state || "";
   ruleForm.hawbRecipient.city = item.city || "";
   ruleForm.hawbRecipient.postalCode = item.postalCode || "";
-  ruleForm.hawbRecipient.houseNo = item.houseNo || "";
   ruleForm.hawbRecipient.street = item.street || "";
+};
+
+const selectAddressBookRow = (row: any) => {
+  handleSelectAddress(row);
+  addressBookDialogVisible.value = false;
+};
+
+const handleCountryChange = () => {
+  delete ruleForm.hawbRecipient.Country;
 };
 
 onMounted(() => {
@@ -246,6 +324,7 @@ const rules = reactive({
 
 // 获取表单数据
 const getParams = async (v: boolean = false) => {
+  delete ruleForm.hawbRecipient.Country;
   if (v) {
     let paramsValue = {};
     await ruleFormRef.value?.validate(valid => {
@@ -297,5 +376,8 @@ defineExpose({ getParams, resetForm, changeRuleForm });
   color: #909399;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+:deep(.el-table__row) {
+  cursor: pointer;
 }
 </style>

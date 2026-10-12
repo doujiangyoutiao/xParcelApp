@@ -73,8 +73,19 @@
                         <template v-for="(item, index) in formattedServices" :key="index">
                           <!-- 自定义分组标题 -->
                           <el-option :value="item.serviceCode">
-                            <div class="option-group-header">
-                              {{ item.serviceCode }}
+                            <div class="provider-option">
+                              <span class="provider-logo-wrap">
+                                <img
+                                  v-if="getProviderLogoUrl(item.companyLogo)"
+                                  class="provider-logo"
+                                  :src="getProviderLogoUrl(item.companyLogo)"
+                                  :alt="item.coloaderCode || item.serviceCode"
+                                />
+                                <span v-else class="provider-logo-fallback">{{
+                                  getProviderInitial(item.coloaderCode || item.serviceCode)
+                                }}</span>
+                              </span>
+                              <span>{{ item.serviceCode }}</span>
                             </div>
                           </el-option>
                         </template>
@@ -135,12 +146,14 @@
           style="width: 100%; min-height: 430px"
         >
           <el-table-column type="selection" width="32" />
-          <el-table-column width="180" fixed="left" :label="$t('orderlist.logistics_tracking_number')">
+          <el-table-column width="164" fixed="left" :label="$t('orderlist.logistics_tracking_number')">
             <template #default="scope">
               <div class="hawb-container">
                 <div class="hawb-number-cell" @click="details(scope.row.id)">
+                  <el-tooltip :content="scope.row.shipmentNumber || '--'" placement="top-start">
+                    <span class="hawb-number">{{ scope.row.shipmentNumber || "--" }}</span>
+                  </el-tooltip>
                   <span class="hawb-text">
-                    {{ scope.row.shipmentNumber }}
                     <el-tooltip
                       v-if="scope.row.childHawbCount > 1"
                       :content="`${scope.row.childHawbCount} Child Packages`"
@@ -155,7 +168,8 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('orderlist.state')" width="100">
+          <el-table-column v-if="showCustomerColumn" prop="customerName" label="Customer" min-width="180" show-overflow-tooltip />
+          <el-table-column :label="$t('orderlist.state')" width="96">
             <template #default="scope">
               <el-tooltip class="box-item" effect="dark" placement="top-start">
                 <template #content>
@@ -181,60 +195,56 @@
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('orderlist.destination')" width="80">
+          <el-table-column min-width="124" :label="$t('orderlist.customer_reference_number')" show-overflow-tooltip>
             <template #default="scope">
-              <div style="display: flex; align-items: center">
-                <span style="padding-left: 5px">{{ scope.row.receiverCountry }}</span>
-              </div>
+              <span class="single-line-cell">{{ scope.row.referenceNumber || "--" }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="referenceNumber" :label="$t('orderlist.customer_reference_number')" />
-          <el-table-column :label="$t('orderlist.recipient')">
+          <el-table-column min-width="144" :label="$t('orderlist.recipient')">
             <template #default="scope">
-              <el-tooltip
-                v-if="scope.row.receiverName.length > 10"
-                class="item"
-                effect="dark"
-                :content="scope.row.receiverName"
-                placement="top-start"
-              >
-                <span>{{ formatName(scope.row.receiverName) }}</span>
+              <el-tooltip :content="formatRecipientTooltip(scope.row)" placement="top-start">
+                <div class="recipient-cell">
+                  <span class="single-line-cell">{{ scope.row.receiverName || "--" }}</span>
+                  <span v-if="scope.row.receiverCountry" class="country-code">{{ scope.row.receiverCountry }}</span>
+                </div>
               </el-tooltip>
-              <span v-else>{{ scope.row.receiverName }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column :label="$t('orderlist.service')">
+          <el-table-column min-width="132" :label="$t('orderlist.service')">
             <template #default="scope">
-              <span style="display: flex; flex-wrap: wrap; align-items: center">
-                {{ scope.row.serviceCode }}
-              </span>
-            </template>
-          </el-table-column>
-
-          <el-table-column :label="$t('orderlist.weight')" width="100">
-            <template #default="{ row }">
-              <div style="padding-right: 12px">
-                {{ row.weight }}
+              <div class="provider-cell">
+                <span class="provider-logo-wrap table-logo">
+                  <img
+                    v-if="getServiceLogoUrl(scope.row.serviceCode)"
+                    class="provider-logo"
+                    :src="getServiceLogoUrl(scope.row.serviceCode)"
+                    :alt="scope.row.serviceCode"
+                  />
+                  <span v-else class="provider-logo-fallback">{{ getProviderInitial(scope.row.serviceCode) }}</span>
+                </span>
+                <el-tooltip :content="scope.row.serviceCode || '--'" placement="top-start">
+                  <span class="single-line-cell">{{ scope.row.serviceCode || "--" }}</span>
+                </el-tooltip>
               </div>
             </template>
           </el-table-column>
 
-          <el-table-column :label="$t('orderlist.order_date')" width="130">
+          <el-table-column :label="$t('orderlist.order_date')" width="112">
             <template #default="scope">
               {{ formatDate(scope.row.shipmentDate) }}
             </template>
           </el-table-column>
 
-          <el-table-column fixed="right" :label="$t('orderlist.action')" width="100">
+          <el-table-column fixed="right" :label="$t('orderlist.action')" width="72" align="center">
             <template #default="scope">
               <div class="image-container">
-                <span style="width: 25%">
+                <span class="action-icon">
                   <el-tooltip class="item" effect="dark" content="label" placement="top">
                     <el-icon @click="handleOrderPrintLabel(scope)"><Printer /></el-icon>
                   </el-tooltip>
                 </span>
-                <span style="width: 25%">
+                <span class="action-icon">
                   <el-tooltip class="item" effect="dark" content="invoice" placement="top">
                     <el-icon @click="handleOrderPrintInvoice(scope)"><Printer /></el-icon>
                   </el-tooltip>
@@ -289,12 +299,31 @@ import moment from "moment";
 import { PageConfig } from "./interface/common.d";
 
 import { useRoute } from "vue-router";
+import { useUserStore } from "@/stores/modules/user";
 //import router from "@/routers";
 import { useI18n } from "vue-i18n";
+import { getProviderInitial, getProviderLogoUrl } from "@/utils/providerLogo";
 const { t } = useI18n();
 //import { useI18n } from "vue-i18n";
 //const { t } = useI18n();
 const route = useRoute();
+const userStore = useUserStore();
+const currentUser = computed(() => userStore.getUserInfo as any);
+const currentUserLevel = computed(() => String(currentUser.value?.userLevel || "").toUpperCase());
+const currentUsername = computed(() => String(currentUser.value?.username || "").toLowerCase());
+const isCustomerAccount = computed(() => currentUserLevel.value === "C" || !!currentUser.value?.customer);
+const isSuperAdminAccount = computed(() => {
+  const companyId = Number(currentUser.value?.companyId || 0);
+  return (
+    currentUsername.value === "yuan" ||
+    ["S", "SA", "SUPER", "SUPERADMIN"].includes(currentUserLevel.value) ||
+    (currentUserLevel.value === "A" && !isCustomerAccount.value && companyId <= 0)
+  );
+});
+const showCustomerColumn = computed(() => {
+  const companyId = Number(currentUser.value?.companyId || 0);
+  return isSuperAdminAccount.value || (currentUserLevel.value === "A" && companyId > 0 && !isCustomerAccount.value);
+});
 
 // useRouter
 // const dropdownItems = ref(["return", "cancelled"]);
@@ -414,8 +443,8 @@ const searchTextareaPlaceholder = computed(() => ({
 //   return new URL(`../img/${code}.png`, import.meta.url).href;
 // };
 
-const formatName = (name: string) => {
-  return name.length > 10 ? name.slice(0, 10) + "..." : name;
+const formatRecipientTooltip = (row: any) => {
+  return [row?.receiverName, row?.receiverCountry].filter(Boolean).join(" · ") || "--";
 };
 // const orderSelect = ref([
 //   { name: "return", icon: Return, count: "0", label: "Return", id: "50" },
@@ -448,15 +477,17 @@ async function serveData() {
   // 检查sessionStorage中是否有保存的数据
   let cachedData = sessionStorage.getItem("dataService");
   console.log(cachedData);
-  if (cachedData && cachedData != "undefined") {
+  const cachedServiceList = cachedData && cachedData != "undefined" ? JSON.parse(cachedData) : null;
+  const hasLogoCache = Array.isArray(cachedServiceList) && cachedServiceList.some(item => item.companyLogo);
+  if (hasLogoCache) {
     // 如果有保存的数据，直接使用
-    state.select.dataService = JSON.parse(cachedData);
+    state.select.dataService = cachedServiceList;
   } else {
     // 如果没有保存的数据，执行请求
     const data: any = await getServiceForSpanner();
     state.select.dataService = data.Data;
     // 将请求到的数据保存在sessionStorage中
-    sessionStorage.setItem("dataService", JSON.stringify(data.result));
+    sessionStorage.setItem("dataService", JSON.stringify(data.Data));
   }
 }
 
@@ -466,6 +497,10 @@ async function serveData() {
 // }
 // 格式化数据结构
 const formattedServices = computed(() => state.select.dataService);
+const getServiceLogoUrl = (serviceCode?: string) => {
+  const service = formattedServices.value.find((item: any) => item.serviceCode === serviceCode);
+  return getProviderLogoUrl(service?.companyLogo);
+};
 //使用计算属性生成服务图标路径
 // const countryIcons = computed(() => {
 //   const icons: Record<string, string> = {};
@@ -607,7 +642,9 @@ const handleCurrentChange = (newPage: number) => {
 // }
 
 /* table 被选中的值 */
-function handleSelectionChange(val: { id: string; serviceCode: string; shipmentNumber: string; shipmentStatus: string }[]) {
+function handleSelectionChange(
+  val: Array<{ id?: string; serviceCode?: string; shipmentNumber?: string; shipmentStatus?: string }>
+) {
   state.tedRowKeys = val.map(item => `${item.id}|${item.shipmentNumber}|${item.serviceCode}|${item.shipmentStatus}`);
 }
 
@@ -1034,10 +1071,79 @@ onMounted(() => {
 .el-dropdown-link:focus {
   outline: none;
 }
-.option-group-header {
+.option-group-header,
+.provider-option,
+.provider-cell {
   display: flex;
+  gap: 8px;
   align-items: center;
+}
+.option-group-header {
   font-weight: bold;
+}
+.provider-cell {
+  min-width: 0;
+}
+.single-line-cell,
+.hawb-number {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hawb-number {
+  flex: 1;
+  color: #009094;
+}
+.recipient-cell {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.recipient-cell .single-line-cell {
+  flex: 1;
+}
+.country-code {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
+  border-radius: 3px;
+}
+.provider-logo-wrap {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 24px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 4px;
+}
+.provider-logo-wrap.table-logo {
+  width: 34px;
+  height: 22px;
+}
+.provider-logo {
+  max-width: 32px;
+  max-height: 18px;
+  object-fit: contain;
+}
+.table-logo .provider-logo {
+  max-width: 28px;
+  max-height: 16px;
+}
+.provider-logo-fallback {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--el-text-color-secondary);
 }
 .country-icon {
   width: 20px;
@@ -1055,9 +1161,18 @@ onMounted(() => {
 }
 .image-container {
   display: flex;
-
-  // align-items: center;
-  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #409eff;
+  cursor: pointer;
 }
 .operation-image {
   width: 16px;
@@ -1124,11 +1239,11 @@ onMounted(() => {
 } */
 .hawb-number-cell {
   display: flex;
-  flex-wrap: wrap;
+  gap: 5px;
   align-items: center;
+  width: 100%;
+  min-width: 0;
   line-height: 1.4;
-  word-break: break-all; /* 单词太长也强制换行 */
-  white-space: normal; /* 允许内容换行 */
 }
 .icon-wrapper {
   display: none; /* 默认隐藏图标 */
