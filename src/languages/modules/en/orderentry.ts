@@ -79,6 +79,7 @@ export default {
   weightkg: "Weight (KG)",
   related_website: "Website",
   pieces: "Pieces",
+  package_weight_required: "Package weight must be greater than 0",
   please_thedeclared_content: "Please enter the declared content",
   please_choose_dutytype: "Please choose duty type",
   please_choose_shipmenttype: "Please choose shipment type",

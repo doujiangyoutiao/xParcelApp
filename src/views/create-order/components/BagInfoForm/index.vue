@@ -123,6 +123,15 @@ const ruleForm = reactive<any>({
 const rules = reactive({
   serviceCode: [{ required: true, message: t("orderentry.please_select"), trigger: "change" }],
   referenceNumber: [{ required: false, message: t("orderentry.please_customer_referencenumber"), trigger: "change" }],
+  weight: [
+    { required: true, message: t("orderentry.please_enter"), trigger: "blur" },
+    {
+      validator: (_rule: any, value: any, callback: (error?: Error) => void) => {
+        Number(value) > 0 ? callback() : callback(new Error(t("orderentry.package_weight_required")));
+      },
+      trigger: "blur"
+    }
+  ],
   pieces: [{ required: true, message: t("orderentry.please_enter"), trigger: "change" }],
   remark: [{ required: false, message: t("orderentry.please_enter_remarks"), trigger: "change" }]
 });
@@ -135,19 +144,23 @@ const getParams = async (v: boolean = false) => {
     let paramsValue = {};
     await ruleFormRef.value?.validate(valid => {
       if (valid) {
-        const packageItem = {
-          referenceNo: ruleForm.referenceNumber || "",
+        const pieces = Math.max(1, Number(ruleForm.pieces) || 1);
+        const totalWeight = Number(ruleForm.weight);
+        const packageWeight = Number((totalWeight / pieces).toFixed(3));
+        const shipmentPackageList = Array.from({ length: pieces }, (_, index) => ({
+          referenceNo: ruleForm.referenceNumber ? `${ruleForm.referenceNumber}-${index + 1}` : "",
           length: ruleForm.length,
           width: ruleForm.width,
-          height: ruleForm.height
-        };
+          height: ruleForm.height,
+          weight: packageWeight
+        }));
         paramsValue = {
           serviceCode: ruleForm.serviceCode,
           weight: ruleForm.weight,
           referenceNumber: ruleForm.referenceNumber,
-          pieces: ruleForm.pieces,
+          pieces,
           remark: ruleForm.remark,
-          shipmentPackageList: [packageItem]
+          shipmentPackageList
         };
       } else {
         paramsValue = "Fail";

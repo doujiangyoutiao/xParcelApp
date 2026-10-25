@@ -79,6 +79,7 @@ export default {
   weightkg: "重量 (KG)",
   related_website: "相关网站",
   pieces: "件数",
+  package_weight_required: "包裹重量必须大于 0",
   please_thedeclared_content: "请输入申报品名",
   please_choose_dutytype: "请选择纳税方式",
   please_choose_shipmenttype: "请选择货物类型",

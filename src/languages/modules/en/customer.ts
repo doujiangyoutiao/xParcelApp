@@ -38,5 +38,15 @@ export default {
   confirm_delete_customer: "Are you sure you want to delete this customer?",
   tip: "Tip",
   delete_success: "Deleted successfully",
-  please_enter_correct_email: "Please enter a valid email format"
+  please_enter_correct_email: "Please enter a valid email format",
+  reset_password: "Reset Password",
+  new_password: "New Password",
+  confirm_password: "Confirm Password",
+  please_enter_new_password: "Please enter a new password",
+  please_confirm_password: "Please enter the new password again",
+  passwords_do_not_match: "The passwords do not match",
+  password_min_length: "Password must be at least 6 characters",
+  reset_password_success: "Password reset successfully",
+  reset_password_subtitle: "Set a new password for the customer account",
+  confirm_reset_password: "Reset Password"
 };

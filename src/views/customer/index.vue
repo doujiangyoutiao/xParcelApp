@@ -34,10 +34,13 @@
         </template>
       </el-table-column>
       <el-table-column prop="status" :label="t('customer.status')" width="80" />
-      <el-table-column :label="t('customer.operation')" align="center" fixed="right" width="190">
+      <el-table-column :label="t('customer.operation')" align="center" fixed="right" width="220">
         <template #default="scope">
           <el-button type="primary" link :icon="Link" @click="openMobileOrderLink(scope.row)" />
           <el-button type="primary" link :icon="EditPen" @click="openDialog(dialogTitles.EDIT, scope.row)" />
+          <el-tooltip :content="t('customer.reset_password')" placement="top">
+            <el-button type="warning" link :icon="Key" @click="openResetPasswordDialog(scope.row)" />
+          </el-tooltip>
           <el-button type="primary" link :icon="Delete" @click="handleDelete(scope.row)" />
         </template>
       </el-table-column>
@@ -163,6 +166,70 @@
       </template>
     </el-dialog>
 
+    <el-dialog
+      v-model="resetPasswordDialogVisible"
+      width="500px"
+      class="reset-password-dialog"
+      destroy-on-close
+      align-center
+      @closed="resetPasswordFormRef?.resetFields()"
+    >
+      <template #header>
+        <div class="reset-password-header">
+          <span class="reset-password-icon">
+            <el-icon><Key /></el-icon>
+          </span>
+          <div>
+            <div class="reset-password-title">{{ t("customer.reset_password") }}</div>
+            <div class="reset-password-subtitle">{{ t("customer.reset_password_subtitle") }}</div>
+          </div>
+        </div>
+      </template>
+
+      <div class="reset-password-customer">
+        <span>{{ t("customer.customer_name") }}</span>
+        <strong>{{ resetPasswordCustomer.name }}</strong>
+      </div>
+
+      <el-form
+        ref="resetPasswordFormRef"
+        :model="resetPasswordForm"
+        :rules="resetPasswordRules"
+        label-position="top"
+        class="reset-password-form"
+      >
+        <el-form-item :label="t('customer.new_password')" prop="newPassword">
+          <el-input
+            v-model="resetPasswordForm.newPassword"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            size="large"
+            :placeholder="t('customer.please_enter_new_password')"
+          />
+        </el-form-item>
+        <el-form-item :label="t('customer.confirm_password')" prop="confirmPassword">
+          <el-input
+            v-model="resetPasswordForm.confirmPassword"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            size="large"
+            :placeholder="t('customer.please_confirm_password')"
+          />
+        </el-form-item>
+        <div class="reset-password-hint">{{ t("customer.password_min_length") }}</div>
+      </el-form>
+      <template #footer>
+        <div class="reset-password-actions">
+          <el-button size="large" @click="resetPasswordDialogVisible = false">{{ t("customer.cancel") }}</el-button>
+          <el-button type="primary" size="large" :loading="resetPasswordLoading" @click="handleResetPassword">
+            {{ t("customer.confirm_reset_password") }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="mobileOrderDialogVisible" title="Mobile Order QR" width="520px" destroy-on-close align-center>
       <div class="mobile-order-link-dialog" v-if="mobileOrderLink.url">
         <img class="mobile-order-qr" :src="qrCodeUrl(mobileOrderLink.url)" alt="Mobile order QR code" />
@@ -180,13 +247,14 @@
 <script setup lang="ts" name="CustomerList">
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Plus, Delete, EditPen, Link } from "@element-plus/icons-vue";
+import { Plus, Delete, EditPen, Link, Key } from "@element-plus/icons-vue";
 import {
   getCustomerList,
   getCustomerById,
   getCustomerCreateOptions,
   addCustomer,
   updateCustomer,
+  resetCustomerPassword,
   deleteCustomer,
   getCustomerMobileOrderLink
 } from "@/api/modules/customer";
@@ -233,6 +301,29 @@ const mobileOrderLink = reactive({
   url: "",
   token: ""
 });
+const resetPasswordDialogVisible = ref(false);
+const resetPasswordLoading = ref(false);
+const resetPasswordFormRef = ref<FormInstance>();
+const resetPasswordCustomer = reactive({ id: 0, name: "" });
+const resetPasswordForm = reactive({ newPassword: "", confirmPassword: "" });
+
+const validateConfirmPassword = (_rule: any, value: string, callback: (error?: Error) => void) => {
+  if (!value) {
+    callback(new Error(t("customer.please_confirm_password")));
+  } else if (value !== resetPasswordForm.newPassword) {
+    callback(new Error(t("customer.passwords_do_not_match")));
+  } else {
+    callback();
+  }
+};
+
+const resetPasswordRules: FormRules = {
+  newPassword: [
+    { required: true, message: () => t("customer.please_enter_new_password"), trigger: "blur" },
+    { min: 6, message: () => t("customer.password_min_length"), trigger: "blur" }
+  ],
+  confirmPassword: [{ validator: validateConfirmPassword, trigger: "blur" }]
+};
 
 const dialogTitles = {
   ADD: t("customer.add_customer"),
@@ -477,6 +568,31 @@ const handleDelete = async (row: any) => {
   }
 };
 
+const openResetPasswordDialog = (row: any) => {
+  resetPasswordCustomer.id = row.id;
+  resetPasswordCustomer.name = row.name || "";
+  resetPasswordForm.newPassword = "";
+  resetPasswordForm.confirmPassword = "";
+  resetPasswordDialogVisible.value = true;
+};
+
+const handleResetPassword = async () => {
+  if (!resetPasswordFormRef.value) return;
+  const valid = await resetPasswordFormRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  resetPasswordLoading.value = true;
+  try {
+    await resetCustomerPassword(resetPasswordCustomer.id, resetPasswordForm.newPassword);
+    ElMessage.success(t("customer.reset_password_success"));
+    resetPasswordDialogVisible.value = false;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    resetPasswordLoading.value = false;
+  }
+};
+
 const qrCodeUrl = (url: string) => `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
 
 const openMobileOrderLink = async (row: any) => {
@@ -557,6 +673,77 @@ onMounted(() => {
     display: flex;
     justify-content: flex-end;
     padding: 16px 0 0;
+  }
+}
+.reset-password-header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.reset-password-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  border-radius: 12px;
+}
+.reset-password-title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  color: var(--el-text-color-primary);
+}
+.reset-password-subtitle {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+.reset-password-customer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  strong {
+    max-width: 280px;
+    overflow: hidden;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.reset-password-form {
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
+  }
+  :deep(.el-form-item__label) {
+    padding-bottom: 8px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+}
+.reset-password-hint {
+  margin-top: -8px;
+  font-size: 12px;
+  color: var(--el-text-color-placeholder);
+}
+.reset-password-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  .el-button {
+    min-width: 104px;
+    margin-left: 0;
   }
 }
 .mobile-order-link-dialog {

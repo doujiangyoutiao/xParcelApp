@@ -29,6 +29,11 @@ export const updateCustomer = (id: number, params: any) => {
   return http.post(`/api/Customers/UpdateCustomer/${id}`, params);
 };
 
+/** 重置客户登录账号密码 */
+export const resetCustomerPassword = (id: number, newPassword: string) => {
+  return http.post(`/api/Customers/${id}/ResetPassword`, { newPassword });
+};
+
 /** 删除客户 */
 export const deleteCustomer = (id: number) => {
   return http.post(`/api/Customers/DeleteCustomer/${id}`);

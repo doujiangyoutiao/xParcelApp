@@ -38,5 +38,15 @@ export default {
   confirm_delete_customer: "确定要删除该客户吗？",
   tip: "提示",
   delete_success: "删除成功",
-  please_enter_correct_email: "请输入正确的邮箱格式"
+  please_enter_correct_email: "请输入正确的邮箱格式",
+  reset_password: "重置密码",
+  new_password: "新密码",
+  confirm_password: "确认密码",
+  please_enter_new_password: "请输入新密码",
+  please_confirm_password: "请再次输入新密码",
+  passwords_do_not_match: "两次输入的密码不一致",
+  password_min_length: "密码至少需要 6 位",
+  reset_password_success: "密码重置成功",
+  reset_password_subtitle: "为客户登录账号设置一个新的密码",
+  confirm_reset_password: "确认重置"
 };
