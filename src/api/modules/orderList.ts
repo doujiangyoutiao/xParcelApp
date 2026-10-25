@@ -39,8 +39,8 @@ export const getPrintInvoice = params => {
 };
 
 /* 取消订单 */
-export const orderCancel = params => {
-  return http.post("/api/services/app/hawb/VueHawbCancel", params);
+export const orderCancel = (id: number) => {
+  return http.post(`/api/Shipment/CancelShipment/${id}`, {});
 };
 
 /* 导出订单报表 */

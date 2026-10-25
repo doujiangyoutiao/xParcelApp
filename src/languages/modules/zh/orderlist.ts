@@ -1,4 +1,7 @@
 export default {
+  confirm_cancel_order: "确定取消订单 {shipmentNumber} 吗？此操作仅更新本地订单状态。",
+  cancel_success: "订单取消成功",
+  cancel_failed: "订单取消失败",
   order_management: "订单管理",
   order_list: "订单列表",
   go: "前往",

@@ -1,4 +1,7 @@
 export default {
+  confirm_cancel_order: "Cancel order {shipmentNumber}? This only updates the local order status.",
+  cancel_success: "Order cancelled successfully",
+  cancel_failed: "Failed to cancel order",
   order_management: "Order Management",
   order_list: "Order List",
   go: "Go to",

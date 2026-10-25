@@ -243,12 +243,17 @@
             </template>
           </el-table-column>
 
-          <el-table-column fixed="right" :label="$t('orderlist.action')" width="72" align="center">
+          <el-table-column fixed="right" :label="$t('orderlist.action')" width="108" align="center">
             <template #default="scope">
               <div class="image-container">
                 <span class="action-icon">
                   <el-tooltip class="item" effect="dark" content="label" placement="top">
                     <el-icon @click="handleOrderPrintLabel(scope)"><Printer /></el-icon>
+                  </el-tooltip>
+                </span>
+                <span v-if="canCancelOrder(scope.row)" class="action-icon cancel-action">
+                  <el-tooltip class="item" effect="dark" :content="$t('orderlist.cancel_order')" placement="top">
+                    <el-icon @click="handleCancelOrder(scope.row)"><CircleCloseFilled /></el-icon>
                   </el-tooltip>
                 </span>
                 <span class="action-icon">
@@ -283,9 +288,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ElTableColumn, ElTag, ElMessage } from "element-plus";
+import { ElTableColumn, ElTag, ElMessage, ElMessageBox } from "element-plus";
 // import SvgIcon from "@/components/SvgIcon/index.vue";
-import { Search, Printer, LocationFilled } from "@element-plus/icons-vue";
+import { Search, Printer, LocationFilled, CircleCloseFilled } from "@element-plus/icons-vue";
 import { reactive, ref, toRefs, onMounted, computed, onBeforeUnmount } from "vue";
 // import { ArrowDown } from "@element-plus/icons-vue";
 import { ADCOrderQueryParam, ADCOrderItem, titleQuery } from "./orders";
@@ -297,6 +302,7 @@ import {
   getServiceForSpanner,
   getCountry,
   getOrderList,
+  orderCancel,
   printLabel,
   getPrintInvoice,
   exportOrderExcel
@@ -439,7 +445,7 @@ const orderData = ref([
   { name: "exception", count: "0", label: "Exception", id: "50" },
   { name: "delivered", count: "0", label: "Delivered", id: "100" },
   { name: "return", count: "0", label: "Return", id: "60" },
-  { name: "cancelled", count: "0", label: "Cancelled", id: "20" }
+  { name: "cancelled", count: "0", label: "Cancelled", id: "40" }
 ]);
 const searchTextareaPlaceholder = computed(() => ({
   shipmentNumber: t("orderlist.supports_different_numbers"),
@@ -457,6 +463,28 @@ const formatCountryTooltip = (countryCode: string) => {
   const country = state.select.dataCountry.find((item: any) => item.code === countryCode);
   return country?.name ? `${country.name} (${countryCode})` : countryCode;
 };
+const canCancelOrder = (row: any) => ["Created", "Printed"].includes(row?.shipmentStatus);
+
+async function handleCancelOrder(row: any) {
+  try {
+    await ElMessageBox.confirm(
+      t("orderlist.confirm_cancel_order", { shipmentNumber: row.shipmentNumber || "" }),
+      t("orderlist.cancel_order"),
+      {
+        confirmButtonText: t("orderlist.confirm"),
+        cancelButtonText: t("orderlist.cancel"),
+        type: "warning"
+      }
+    );
+    await orderCancel(row.id);
+    ElMessage.success(t("orderlist.cancel_success"));
+    handleQuery();
+  } catch (error: any) {
+    if (error !== "cancel" && error !== "close") {
+      ElMessage.error(error?.message || t("orderlist.cancel_failed"));
+    }
+  }
+}
 // const orderSelect = ref([
 //   { name: "return", icon: Return, count: "0", label: "Return", id: "50" },
 //   { name: "cancelled", icon: Canceled, count: "0", label: "cancelled", id: "25" }
@@ -1134,6 +1162,9 @@ onMounted(() => {
 }
 .country-code .el-icon {
   font-size: 13px;
+}
+.cancel-action {
+  color: var(--el-color-danger);
 }
 .provider-logo-wrap {
   display: inline-flex;
