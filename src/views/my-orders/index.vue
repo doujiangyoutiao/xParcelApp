@@ -200,12 +200,19 @@
               <span class="single-line-cell">{{ scope.row.referenceNumber || "--" }}</span>
             </template>
           </el-table-column>
-          <el-table-column min-width="144" :label="$t('orderlist.recipient')">
+          <el-table-column min-width="160" :label="$t('orderlist.recipient')">
             <template #default="scope">
               <el-tooltip :content="formatRecipientTooltip(scope.row)" placement="top-start">
                 <div class="recipient-cell">
                   <span class="single-line-cell">{{ scope.row.receiverName || "--" }}</span>
-                  <span v-if="scope.row.receiverCountry" class="country-code">{{ scope.row.receiverCountry }}</span>
+                  <span
+                    v-if="scope.row.receiverCountry"
+                    class="country-code"
+                    :title="formatCountryTooltip(scope.row.receiverCountry)"
+                  >
+                    <el-icon><LocationFilled /></el-icon>
+                    {{ scope.row.receiverCountry }}
+                  </span>
                 </div>
               </el-tooltip>
             </template>
@@ -278,7 +285,7 @@
 <script lang="ts" setup>
 import { ElTableColumn, ElTag, ElMessage } from "element-plus";
 // import SvgIcon from "@/components/SvgIcon/index.vue";
-import { Search, Printer } from "@element-plus/icons-vue";
+import { Search, Printer, LocationFilled } from "@element-plus/icons-vue";
 import { reactive, ref, toRefs, onMounted, computed, onBeforeUnmount } from "vue";
 // import { ArrowDown } from "@element-plus/icons-vue";
 import { ADCOrderQueryParam, ADCOrderItem, titleQuery } from "./orders";
@@ -445,6 +452,10 @@ const searchTextareaPlaceholder = computed(() => ({
 
 const formatRecipientTooltip = (row: any) => {
   return [row?.receiverName, row?.receiverCountry].filter(Boolean).join(" · ") || "--";
+};
+const formatCountryTooltip = (countryCode: string) => {
+  const country = state.select.dataCountry.find((item: any) => item.code === countryCode);
+  return country?.name ? `${country.name} (${countryCode})` : countryCode;
 };
 // const orderSelect = ref([
 //   { name: "return", icon: Return, count: "0", label: "Return", id: "50" },
@@ -1106,13 +1117,23 @@ onMounted(() => {
   flex: 1;
 }
 .country-code {
+  display: inline-flex;
   flex: 0 0 auto;
-  padding: 1px 5px;
-  font-size: 11px;
+  gap: 3px;
+  align-items: center;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 18px;
-  color: var(--el-text-color-secondary);
-  background: var(--el-fill-color-light);
-  border-radius: 3px;
+  color: #007f83;
+  letter-spacing: 0.3px;
+  background: #e6f7f7;
+  border: 1px solid #9ddede;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(0 144 148 / 12%);
+}
+.country-code .el-icon {
+  font-size: 13px;
 }
 .provider-logo-wrap {
   display: inline-flex;
