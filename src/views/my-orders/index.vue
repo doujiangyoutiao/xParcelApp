@@ -251,14 +251,14 @@
                     <el-icon @click="handleOrderPrintLabel(scope)"><Printer /></el-icon>
                   </el-tooltip>
                 </span>
-                <span v-if="canCancelOrder(scope.row)" class="action-icon cancel-action">
-                  <el-tooltip class="item" effect="dark" :content="$t('orderlist.cancel_order')" placement="top">
-                    <el-icon @click="handleCancelOrder(scope.row)"><CircleCloseFilled /></el-icon>
-                  </el-tooltip>
-                </span>
                 <span class="action-icon">
                   <el-tooltip class="item" effect="dark" content="invoice" placement="top">
                     <el-icon @click="handleOrderPrintInvoice(scope)"><Printer /></el-icon>
+                  </el-tooltip>
+                </span>
+                <span v-if="canCancelOrder(scope.row)" class="action-icon cancel-action">
+                  <el-tooltip class="item" effect="dark" :content="$t('orderlist.cancel_order')" placement="top">
+                    <el-icon @click="handleCancelOrder(scope.row)"><CircleCloseFilled /></el-icon>
                   </el-tooltip>
                 </span>
               </div>
