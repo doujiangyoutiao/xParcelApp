@@ -218,7 +218,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column min-width="132" :label="$t('orderlist.service')">
+          <el-table-column min-width="148" :label="$t('orderlist.service')">
             <template #default="scope">
               <div class="provider-cell">
                 <span class="provider-logo-wrap table-logo">
@@ -1176,8 +1176,8 @@ onMounted(() => {
   border-radius: 4px;
 }
 .provider-logo-wrap.table-logo {
-  width: 34px;
-  height: 22px;
+  width: 44px;
+  height: 28px;
 }
 .provider-logo {
   max-width: 32px;
@@ -1185,8 +1185,8 @@ onMounted(() => {
   object-fit: contain;
 }
 .table-logo .provider-logo {
-  max-width: 28px;
-  max-height: 16px;
+  max-width: 40px;
+  max-height: 24px;
 }
 .provider-logo-fallback {
   font-size: 11px;
