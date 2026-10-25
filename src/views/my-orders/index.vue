@@ -886,11 +886,8 @@ function handleQuery(): void {
       if (item.Name === "Delivered") {
         state.queryData.deliveredNum = item.Count;
       }
-      if (item.Name === "Cancel") {
+      if (["Cancel", "Cancelled", "cancelled"].includes(item.Name)) {
         state.queryData.cancel = item.Count;
-      }
-      if (item.Name === "cancelled") {
-        state.queryData.cancelled = item.Count;
       }
       allNum();
     });
