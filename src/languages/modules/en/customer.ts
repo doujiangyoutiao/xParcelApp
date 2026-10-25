@@ -5,6 +5,8 @@ export default {
   email: "Email",
   company: "Company",
   country: "Country",
+  created_time: "Created Time",
+  modified_time: "Modified Time",
   status: "Status",
   operation: "Actions",
   search: "Search",

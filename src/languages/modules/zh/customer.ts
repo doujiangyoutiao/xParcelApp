@@ -5,6 +5,8 @@ export default {
   email: "邮箱",
   company: "所属公司",
   country: "国家",
+  created_time: "创建时间",
+  modified_time: "修改时间",
   status: "状态",
   operation: "操作",
   search: "搜索",

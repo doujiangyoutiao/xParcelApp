@@ -33,6 +33,12 @@
           {{ formatCountryDisplayName(row.countryName) }}
         </template>
       </el-table-column>
+      <el-table-column :label="t('customer.created_time')" width="170">
+        <template #default="{ row }">{{ formatDateTime(row.createdTime) }}</template>
+      </el-table-column>
+      <el-table-column :label="t('customer.modified_time')" width="170">
+        <template #default="{ row }">{{ formatDateTime(row.modifiedTime) }}</template>
+      </el-table-column>
       <el-table-column prop="status" :label="t('customer.status')" width="80" />
       <el-table-column :label="t('customer.operation')" align="center" fixed="right" width="220">
         <template #default="scope">
@@ -92,8 +98,10 @@
               <el-select
                 v-model="formData.companyId"
                 :placeholder="t('customer.please_select_company')"
+                class="customer-form-select"
                 clearable
                 filterable
+                popper-class="customer-select-dropdown"
                 @change="handleCompanyChange"
               >
                 <el-option v-for="item in companyList" :key="item.id" :label="item.companyName" :value="item.id" />
@@ -102,7 +110,14 @@
           </el-col>
           <el-col :span="12">
             <el-form-item :label="t('customer.country')" prop="countriesId">
-              <el-select v-model="formData.countriesId" :placeholder="t('customer.please_select_country')" clearable filterable>
+              <el-select
+                v-model="formData.countriesId"
+                :placeholder="t('customer.please_select_country')"
+                class="customer-form-select"
+                clearable
+                filterable
+                popper-class="customer-select-dropdown"
+              >
                 <el-option v-for="item in countryList" :key="item.id" :label="item.name" :value="item.id" />
               </el-select>
             </el-form-item>
@@ -262,8 +277,10 @@ import { getCompanyList, getCountries } from "@/api/modules/company";
 import { useUserStore } from "@/stores/modules/user";
 import { useI18n } from "vue-i18n";
 import { formatCountryDisplayName } from "@/utils";
+import dayjs from "dayjs";
 
 const { t } = useI18n();
+const formatDateTime = (value?: string) => (value ? dayjs(value).format("YYYY-MM-DD HH:mm:ss") : "-");
 
 // 搜索
 const searchForm = reactive({
@@ -674,6 +691,17 @@ onMounted(() => {
     justify-content: flex-end;
     padding: 16px 0 0;
   }
+}
+.customer-form-select {
+  width: 100%;
+}
+:global(.customer-select-dropdown) {
+  min-width: 360px !important;
+  max-width: calc(100vw - 32px);
+}
+:global(.customer-select-dropdown .el-select-dropdown__item) {
+  overflow: visible;
+  text-overflow: clip;
 }
 .reset-password-header {
   display: flex;
