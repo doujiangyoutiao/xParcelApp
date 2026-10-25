@@ -1,4 +1,5 @@
 export default {
+  company: "Company",
   connected_providers: "Available Logistics Providers:",
   service_list: "Service List",
   provider: "Provider",

@@ -41,6 +41,7 @@
           </div>
         </template>
       </el-table-column>
+      <el-table-column v-if="isSuperAdminAccount" prop="companyName" :label="t('service.company')" min-width="180" />
       <el-table-column prop="serviceCode" :label="t('service.service_code')" min-width="150" />
       <el-table-column prop="remark" :label="t('service.remark')" min-width="150" />
       <el-table-column prop="creationTime" :label="t('service.creation_time')" width="180">
@@ -93,7 +94,7 @@
 </template>
 
 <script setup lang="ts" name="ServiceList">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { Plus, EditPen } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import {
@@ -105,8 +106,16 @@ import {
 import { useI18n } from "vue-i18n";
 import moment from "moment";
 import { getProviderInitial, getProviderLogoUrl } from "@/utils/providerLogo";
+import { useUserStore } from "@/stores/modules/user";
 
 const { t } = useI18n();
+const userStore = useUserStore();
+const isSuperAdminAccount = computed(() => {
+  const userInfo: any = userStore.getUserInfo;
+  const userLevel = String(userInfo?.userLevel || "").toUpperCase();
+  const companyId = Number(userInfo?.companyId || 0);
+  return ["S", "SA", "SUPER", "SUPERADMIN"].includes(userLevel) || (userLevel === "A" && companyId <= 0);
+});
 
 // coloader列表
 const coloaderList = ref<any[]>([]);

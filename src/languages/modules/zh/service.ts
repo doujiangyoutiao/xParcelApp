@@ -1,4 +1,5 @@
 export default {
+  company: "公司",
   connected_providers: "可连接的物流服务商:",
   service_list: "服务列表",
   provider: "服务商",
